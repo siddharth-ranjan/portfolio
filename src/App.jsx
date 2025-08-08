@@ -145,7 +145,14 @@ const Hero = () => (
         </div>
       </div>
       <div className="md:w-1/2 lg:w-1/3 mt-12 md:mt-0 reveal">
-        <img src="https://myimagesiddharth.blob.core.windows.net/$web/photo.jpeg" onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/400x400/1f2937/d1d5db?text=SR'; }} alt="Siddharth Ranjan" className="rounded-2xl shadow-lg w-full max-w-sm mx-auto" />
+        <a href="/image" className="block">
+          <img 
+            src="https://myimagesiddharth.blob.core.windows.net/$web/photo.jpeg" 
+            onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/400x400/1f2937/d1d5db?text=SR'; }} 
+            alt="Siddharth Ranjan" 
+            className="rounded-2xl shadow-lg w-full max-w-sm mx-auto cursor-pointer hover:scale-105 transition-transform duration-300" 
+          />
+        </a>
       </div>
     </div>
   </section>
@@ -251,67 +258,6 @@ const Footer = () => (
   </footer>
 );
 
-// Image Component for the /image route
-const ImagePage = () => (
-  <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
-    <div className="max-w-2xl mx-auto text-center">
-      <h1 className="text-4xl font-bold text-white mb-8">Siddharth Ranjan</h1>
-      <img 
-        src="https://myimagesiddharth.blob.core.windows.net/$web/photo.jpeg" 
-        alt="Siddharth Ranjan" 
-        className="rounded-2xl shadow-lg w-full max-w-md mx-auto"
-        onError={(e) => {
-          e.target.onerror = null;
-          e.target.src = 'https://placehold.co/400x400/1f2937/d1d5db?text=SR';
-        }}
-      />
-      <div className="mt-8">
-        <a 
-          href="/" 
-          className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300"
-        >
-          Back to Portfolio
-        </a>
-      </div>
-    </div>
-  </div>
-);
-
-// Resume Component for the /resume route
-const ResumePage = () => (
-  <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6">
-    <div className="max-w-4xl mx-auto text-center mb-6">
-      <h1 className="text-4xl font-bold text-white mb-4">Resume</h1>
-      <p className="text-gray-300 mb-6">Siddharth Ranjan</p>
-      <div className="flex flex-wrap justify-center gap-4 mb-6">
-        <a 
-          href="https://myimagesiddharth.blob.core.windows.net/$web/siddharth-ranjan-resume.pdf" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300"
-        >
-          Download PDF
-        </a>
-        <a 
-          href="/" 
-          className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300"
-        >
-          Back to Portfolio
-        </a>
-      </div>
-    </div>
-    
-    {/* PDF Viewer */}
-    <div className="w-full max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
-      <iframe
-        src="https://myimagesiddharth.blob.core.windows.net/$web/siddharth-ranjan-resume.pdf"
-        className="w-full h-[80vh] min-h-[600px]"
-        title="Siddharth Ranjan Resume"
-      />
-    </div>
-  </div>
-);
-
 // Portfolio Component (your existing portfolio)
 const Portfolio = () => {
   // Initialize ScrollReveal and set document title
@@ -319,12 +265,14 @@ const Portfolio = () => {
     // Set document title
     document.title = "Portfolio - Siddharth Ranjan";
     
-    // Set favicon
+    // Set favicon for portfolio page
     const favicon = document.querySelector("link[rel*='icon']") || document.createElement('link');
-    favicon.type = 'image/svg+xml';
+    favicon.type = 'image/png';
     favicon.rel = 'shortcut icon';
-    favicon.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><path d='M117.193 29.24H84.267V13.752A1.751 1.751 0 0 0 82.517 12H45.483a1.751 1.751 0 0 0-1.75 1.75v15.49H10.807a6.257 6.257 0 0 0-6.25 6.25v74.258a6.257 6.257 0 0 0 6.25 6.25h106.386a6.257 6.257 0 0 0 6.25-6.25V35.49a6.257 6.257 0 0 0-6.25-6.25zM47.233 15.5h33.534v13.74h-3.3v-8.692a1.751 1.751 0 0 0-1.75-1.75H52.278a1.751 1.751 0 0 0-1.75 1.75v8.692h-3.3zm6.8 13.738V22.3h19.939v6.94zm-43.221 3.5h106.381a2.754 2.754 0 0 1 2.75 2.75v20.431L100.8 70.869h-7.762a29.09 29.09 0 0 0-58.076 0h-7.757L8.057 55.919V35.49a2.754 2.754 0 0 1 2.75-2.75zM64 74.911a7.482 7.482 0 1 1 7.481-7.482A7.489 7.489 0 0 1 64 74.911zm0 3.5a10.918 10.918 0 0 0 4.168-.827l7.793 3.033a4.949 4.949 0 0 1 3.173 4.641v7.986a25.523 25.523 0 0 1-30.268 0v-7.986a4.948 4.948 0 0 1 3.173-4.641l7.793-3.033a10.918 10.918 0 0 0 4.168.827zm13.23-1.056-5.5-2.139a10.981 10.981 0 1 0-15.467 0l-5.5 2.139a8.428 8.428 0 0 0-5.4 7.9v4.881a25.6 25.6 0 1 1 37.268 0v-4.878a8.428 8.428 0 0 0-5.401-7.903zm39.963 35.145H10.807a2.754 2.754 0 0 1-2.75-2.75V60.36L25.526 74a1.745 1.745 0 0 0 1.077.371h8.359a29.09 29.09 0 0 0 58.076 0h8.362a1.747 1.747 0 0 0 1.074-.371l17.469-13.64v49.388a2.754 2.754 0 0 1-2.75 2.752z'/></svg>";
-    document.getElementsByTagName('head')[0].appendChild(favicon);
+    favicon.href = "https://myimagesiddharth.blob.core.windows.net/$web/portfolio-icon.png";
+    if (!document.querySelector("link[rel*='icon']")) {
+      document.getElementsByTagName('head')[0].appendChild(favicon);
+    }
     
     const script = document.createElement('script');
     script.src = 'https://unpkg.com/scrollreveal';
@@ -370,6 +318,101 @@ const Portfolio = () => {
         <Contact />
       </main>
       <Footer />
+    </div>
+  );
+};
+
+// Image Component for the /image route
+const ImagePage = () => {
+  useEffect(() => {
+    // Set document title and favicon for image page
+    document.title = "Photo - Siddharth Ranjan";
+    
+    const favicon = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    favicon.type = 'image/png';
+    favicon.rel = 'shortcut icon';
+    favicon.href = "https://myimagesiddharth.blob.core.windows.net/$web/photo-icon.png";
+    if (!document.querySelector("link[rel*='icon']")) {
+      document.getElementsByTagName('head')[0].appendChild(favicon);
+    }
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
+      <div className="max-w-2xl mx-auto text-center">
+        <h1 className="text-4xl font-bold text-white mb-8">Siddharth Ranjan</h1>
+        <img 
+          src="https://myimagesiddharth.blob.core.windows.net/$web/photo.jpeg" 
+          alt="Siddharth Ranjan" 
+          className="rounded-2xl shadow-lg w-full max-w-md mx-auto"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = 'https://placehold.co/400x400/1f2937/d1d5db?text=SR';
+          }}
+        />
+        <div className="mt-8">
+          <a 
+            href="/" 
+            className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300"
+          >
+            Back to Portfolio
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Resume Component for the /resume route
+const ResumePage = () => {
+  useEffect(() => {
+    // Set document title and favicon for resume page
+    document.title = "Resume - Siddharth Ranjan";
+    
+    // Remove existing favicon and create new one
+    const existingFavicon = document.querySelector("link[rel*='icon']");
+    if (existingFavicon) {
+      existingFavicon.remove();
+    }
+    
+    const favicon = document.createElement('link');
+    favicon.type = 'image/png';
+    favicon.rel = 'shortcut icon';
+    favicon.href = "https://myimagesiddharth.blob.core.windows.net/$web/resume-icon.png";
+    document.getElementsByTagName('head')[0].appendChild(favicon);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6">
+      <div className="max-w-4xl mx-auto text-center mb-6">
+        <h1 className="text-4xl font-bold text-white mb-4">Resume</h1>
+        <p className="text-gray-300 mb-6">Siddharth Ranjan</p>
+        <div className="flex flex-wrap justify-center gap-4 mb-6">
+          <a 
+            href="https://myimagesiddharth.blob.core.windows.net/$web/siddharth-ranjan-resume.pdf" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300"
+          >
+            Download PDF
+          </a>
+          <a 
+            href="/" 
+            className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300"
+          >
+            Back to Portfolio
+          </a>
+        </div>
+      </div>
+      
+      {/* PDF Viewer */}
+      <div className="w-full max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+        <iframe
+          src="https://myimagesiddharth.blob.core.windows.net/$web/siddharth-ranjan-resume.pdf"
+          className="w-full h-[80vh] min-h-[600px]"
+          title="Siddharth Ranjan Resume"
+        />
+      </div>
     </div>
   );
 };
