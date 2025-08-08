@@ -8,7 +8,7 @@ const experienceData = [
   {
     title: "Research and Development Intern",
     company: "Nokia",
-    date: "Aug 2024 - Present",
+    date: "Aug 2024 - May 2025",
     description: [
       "Developed a web solution to streamline management and visualization of test results.",
       "Aimed to reduce management workflow by 30% through automation and centralized reporting.",
