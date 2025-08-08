@@ -365,7 +365,17 @@ const ImagePage = () => {
 
 // Resume Component for the /resume route
 const ResumePage = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
+    // Check if device is mobile
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
     // Set document title and favicon for resume page
     document.title = "Resume - Siddharth Ranjan";
     
@@ -380,6 +390,8 @@ const ResumePage = () => {
     favicon.rel = 'shortcut icon';
     favicon.href = "https://myimagesiddharth.blob.core.windows.net/$web/resume-icon.png";
     document.getElementsByTagName('head')[0].appendChild(favicon);
+
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   return (
@@ -405,14 +417,33 @@ const ResumePage = () => {
         </div>
       </div>
       
-      {/* PDF Viewer */}
-      <div className="w-full max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
-        <iframe
-          src="https://myimagesiddharth.blob.core.windows.net/$web/siddharth-ranjan-resume.pdf"
-          className="w-full h-[80vh] min-h-[600px]"
-          title="Siddharth Ranjan Resume"
-        />
-      </div>
+      {/* PDF Viewer - Different behavior for mobile */}
+      {isMobile ? (
+        <div className="w-full max-w-4xl mx-auto text-center">
+          <div className="bg-gray-800 p-8 rounded-lg">
+            <h3 className="text-xl font-bold text-white mb-4">PDF Preview</h3>
+            <p className="text-gray-300 mb-6">
+              PDF preview is not available on mobile devices. Please download the PDF to view it.
+            </p>
+            <a 
+              href="https://myimagesiddharth.blob.core.windows.net/$web/siddharth-ranjan-resume.pdf" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 inline-block"
+            >
+              Open PDF
+            </a>
+          </div>
+        </div>
+      ) : (
+        <div className="w-full max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+          <iframe
+            src="https://myimagesiddharth.blob.core.windows.net/$web/siddharth-ranjan-resume.pdf"
+            className="w-full h-[80vh] min-h-[600px]"
+            title="Siddharth Ranjan Resume"
+          />
+        </div>
+      )}
     </div>
   );
 };
