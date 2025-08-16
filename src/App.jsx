@@ -7,14 +7,15 @@ import './App.css';
 const experienceData = [
   {
     title: "Research and Development Intern",
-    company: "Nokia",
+    company: "Nokia - FN BBN CU-Hardening",
     date: "Aug 2024 - May 2025",
     description: [
-      "Developed a web solution to streamline management and visualization of test results.",
-      "Aimed to reduce management workflow by 30% through automation and centralized reporting.",
-      "Improved overall productivity by simplifying navigation and analysis of test data across several boards.",
+      "Engineered a web-based visualization tool that automated test data aggregation, reducing the manual reporting workflow by 30%.",
+      "Authored a Python script to dynamically generate configuration images, reducing manual analysis time by over 80% (from 10 mins to under 1 min).",
+      "Re-architected a core logic component to resolve a critical, argument-specific failure, enhancing overall system robustness.",
+      "Automated a repetitive manual batch job with a new script, boosting developer efficiency and eliminating a source of potential human error."
     ],
-    tech: ["openGrok", "Markdown", "Tomcat", "Mercurial"],
+    tech: ["openGrok", "Markdown", "Tomcat", "Mercurial", "Python", "Flask"],
   },
 ];
 
@@ -25,7 +26,7 @@ const skillsData = [
     color: "from-orange-500 to-red-600"
   },
   {
-    name: "Spring Boot", 
+    name: "Spring Boot",
     icon: <img src="https://www.vectorlogo.zone/logos/springio/springio-icon.svg" alt="Spring Boot" className="w-12 h-12" />,
     color: "from-green-500 to-green-600"
   },
@@ -73,26 +74,25 @@ const skillsData = [
 
 const projectsData = [
   {
-    title: "Blogging Platform API",
-    image: "https://placehold.co/600x400/1f2937/4ade80?text=Blogging+API",
+    title: "Movie Reservation System",
+    image: "https://placehold.co/600x400/1f2937/4ade80?text=Movie+System",
     description: [
-        "Built a complete backend system using Spring Boot.",
-        "Enabled user registration, post creation, likes, and comments.",
-        "Implemented full CRUD (Create, Read, Update, Delete) functionality for posts.",
+        "Architected a secure and scalable backend for a movie reservation platform, currently in ongoing development.",
+        "Engineered a robust security model using JWT-based authentication and implemented granular, role-based access control (USER/ADMIN).",
     ],
-    tags: ["Spring Boot", "MySQL", "Spring Data JPA", "REST API"],
-    link: "https://github.com/siddharth-ranjan/blogging-project",
+    tags: ["Java", "Spring Boot", "Spring Security", "JWT", "Spring Modulith"],
+    link: "https://github.com/siddharth-ranjan/movie-reservation-system",
   },
   {
     title: "Chat with PDF using Gemini",
     image: "https://placehold.co/600x400/1f2937/4ade80?text=Chat+with+PDF",
     description: [
-        "Created a web app for interactive document querying.",
-        "Allowed users to upload PDFs and extract text automatically.",
-        "Used Google's Generative AI to provide fast, context-driven answers from the document.",
+        "Developed a GenAI-powered application leveraging Langchain and FAISS to index and query multiple PDFs.",
+        "Reduced information retrieval time from minutes to seconds through efficient, AI-driven document analysis.",
     ],
     tags: ["Streamlit", "LangChain", "Generative AI", "FAISS"],
     link: "https://github.com/siddharth-ranjan/multi-pdf-chat",
+    liveLink: "https://chatpdf-6-bp1z.onrender.com/"
   },
 ];
 
@@ -100,7 +100,14 @@ const projectsData = [
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const navLinks = ["Experience", "Skills", "Projects", "Contact"];
+  const navLinks = [
+    { name: "Experience", href: "#experience", external: false },
+    { name: "Skills", href: "#skills", external: false },
+    { name: "Projects", href: "#projects", external: false },
+    { name: "GitHub", href: "https://github.com/siddharth-ranjan", external: true },
+    { name: "LeetCode", href: "https://leetcode.com/u/sid0909/", external: true },
+    { name: "Contact", href: "#contact", external: false },
+  ];
 
   return (
     <header className="fixed w-full z-50 top-0" style={{ background: 'rgba(31, 41, 55, 0.5)', backdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
@@ -108,7 +115,15 @@ const Header = () => {
         <a href="#" className="text-2xl font-bold text-white">Siddharth Ranjan</a>
         <div className="hidden md:flex space-x-8">
           {navLinks.map(link => (
-            <a key={link} href={`#${link.toLowerCase()}`} className="text-lg text-gray-300 hover:text-green-400 transition-colors">{link}</a>
+            <a 
+              key={link.name} 
+              href={link.href} 
+              className="text-lg text-gray-300 hover:text-green-400 transition-colors"
+              target={link.external ? '_blank' : '_self'}
+              rel={link.external ? 'noopener noreferrer' : ''}
+            >
+              {link.name}
+            </a>
           ))}
         </div>
         <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-white">
@@ -121,7 +136,16 @@ const Header = () => {
       {isOpen && (
         <div className="md:hidden">
           {navLinks.map(link => (
-             <a key={link} href={`#${link.toLowerCase()}`} className="block py-2 px-4 text-sm text-gray-200 hover:bg-gray-700" onClick={() => setIsOpen(false)}>{link}</a>
+             <a 
+              key={link.name} 
+              href={link.href} 
+              className="block py-2 px-4 text-sm text-gray-200 hover:bg-gray-700" 
+              onClick={() => setIsOpen(false)}
+              target={link.external ? '_blank' : '_self'}
+              rel={link.external ? 'noopener noreferrer' : ''}
+            >
+              {link.name}
+            </a>
           ))}
         </div>
       )}
@@ -137,7 +161,7 @@ const Hero = () => (
         <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-4 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>Siddharth Ranjan.</h1>
         <h2 className="text-4xl md:text-6xl font-bold text-gray-400 mb-8 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>I build robust backend solutions.</h2>
         <p className="max-w-xl mx-auto md:mx-0 text-lg text-gray-300 mb-8 animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
-          I'm a Java developer building a solid foundation in Spring Boot, with a strong interest in exploring the capabilities of Generative AI and Machine Learning. My experience includes an R&D internship at Nokia and a strong background in competitive programming.
+          I'm a Software Developer specializing in scalable backend services using Java and Spring Boot. I have experience applying Generative AI and Machine Learning to build intelligent applications.
         </p>
         <div className="flex flex-wrap justify-center md:justify-start gap-4 animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
           <a href="#projects" className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">View My Projects</a>
@@ -223,6 +247,7 @@ const Projects = () => (
             </div>
             <div className="flex space-x-4">
               <a href={project.link} target="_blank" rel="noopener noreferrer" className="text-green-400 hover:text-green-300">GitHub</a>
+              {project.liveLink && <a href={project.liveLink} target="_blank" rel="noopener noreferrer" className="text-green-400 hover:text-green-300">Live Demo</a>}
             </div>
           </div>
         </div>
@@ -250,10 +275,6 @@ const Footer = () => (
   <footer className="bg-gray-900 py-6">
     <div className="container mx-auto px-6 text-center text-gray-500">
       <p>&copy; {new Date().getFullYear()} Siddharth Ranjan. All rights reserved.</p>
-      <p>
-        <a href="https://github.com/siddharth-ranjan" target="_blank" rel="noopener noreferrer" className="hover:text-green-400">GitHub</a> | {' '}
-        <a href="https://leetcode.com/u/sid0909/" target="_blank" rel="noopener noreferrer" className="hover:text-green-400">LeetCode</a>
-      </p>
     </div>
   </footer>
 );
