@@ -515,3 +515,14 @@ section[id]{scroll-margin-top:80px}
 /* ── top-bar name stays out of the way while the hero name is on screen ── */
 .brand{transition:opacity .25s ease,transform .25s ease,visibility .25s}
 .topbar.brand-hidden .brand{opacity:0;visibility:hidden;transform:translateY(-4px)}
+
+/* ── theme switch: square track, square block — a hardware switch, not a phone pill ── */
+.theme-switch{display:flex;align-items:center;gap:10px;flex:none;padding:4px 0;border:0;background:none;cursor:pointer;
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);transition:color .15s}
+.theme-switch:hover{color:var(--text)}
+.ts-track{position:relative;width:36px;height:18px;border:1px solid var(--line);background:var(--bg-2);transition:border-color .15s}
+.theme-switch:hover .ts-track{border-color:var(--accent)}
+.ts-knob{position:absolute;top:2px;left:2px;width:12px;height:12px;background:var(--text);
+  transition:transform .22s cubic-bezier(.4,0,.2,1)}
+[data-theme="light"] .ts-knob{transform:translateX(18px)}
+.ts-label{min-width:5.5ch;text-align:left}

@@ -3,22 +3,22 @@
 
   /* ── theme ──────────────────────────────────────────── */
   var root = document.documentElement;
-  var stored = null;
-  try { stored = localStorage.getItem('theme'); } catch (e) {}
-  if (stored === 'light' || stored === 'dark') setTheme(stored);
+  var themeSwitch = document.getElementById('theme-switch');
 
   function setTheme(t) {
     root.setAttribute('data-theme', t);
     try { localStorage.setItem('theme', t); } catch (e) {}
-    document.querySelectorAll('[data-theme-set]').forEach(function (b) {
-      b.classList.toggle('is-on', b.dataset.themeSet === t);
-      b.setAttribute('aria-pressed', String(b.dataset.themeSet === t));
-    });
+    if (!themeSwitch) return;
+    // the switch is "on" for dark: block left = dark, right = light
+    themeSwitch.setAttribute('aria-checked', String(t === 'dark'));
+    themeSwitch.querySelector('.ts-label').textContent = t === 'dark' ? 'Dark' : 'Light';
   }
-  document.querySelectorAll('[data-theme-set]').forEach(function (b) {
-    b.addEventListener('click', function () { setTheme(b.dataset.themeSet); });
+  var stored = null;
+  try { stored = localStorage.getItem('theme'); } catch (e) {}
+  setTheme(stored === 'light' || stored === 'dark' ? stored : root.getAttribute('data-theme'));
+  if (themeSwitch) themeSwitch.addEventListener('click', function () {
+    setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
   });
-  setTheme(root.getAttribute('data-theme'));
 
   /* ── top-bar name: only once the hero name has scrolled away ── */
   var topbar = document.querySelector('.topbar');
