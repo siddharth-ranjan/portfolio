@@ -280,7 +280,7 @@
       '/roles': {
         subject: 'Backend role',
         hint: 'the role, team and stack',
-        placeholder: "We're hiring a backend engineer for our payments team (Java 21, Spring Boot, Kafka). Here's the role and what the interview loop looks like…"
+        placeholder: "We're hiring a backend engineer for our payments team (Java, Spring Boot, Kafka). Here's the role and what the interview loop looks like…"
       },
       '/contract': {
         subject: 'Contract work',
@@ -390,8 +390,8 @@
     },
     whoami: function () {
       return [
-        ['ok', 'siddharth-ranjan · backend engineer · Java 21 / Spring Boot'],
-        ['dim', 'distributed systems · event-driven · Kafka, Redis, Postgres']
+        ['ok', 'siddharth-ranjan · backend engineer · Java / Spring Boot'],
+        ['dim', 'distributed systems · event-driven · Kafka, Redis, MySQL']
       ];
     },
     flow: function () {
@@ -452,12 +452,13 @@
     },
     stack: function () {
       return [
-        ['dim', '  language    Java 21 · Python 3.12'],
-        ['dim', '  framework   Spring Boot / MVC'],
-        ['dim', '  event bus   Kafka (KRaft)'],
-        ['dim', '  cache       Redis 7'],
-        ['dim', '  store       Postgres 16 + pgvector'],
-        ['dim', '  testing     TDD · PIT mutation']
+        ['dim', '  language    Java · Python · SQL'],
+        ['dim', '  framework   Spring Boot · Spring Data JPA · Flask'],
+        ['dim', '  messaging   Apache Kafka'],
+        ['dim', '  cache       Redis'],
+        ['dim', '  store       MySQL'],
+        ['dim', '  cloud       AWS EC2 · Microsoft Azure'],
+        ['dim', '  ai          LangChain · FAISS · Gemini API · Vertex AI']
       ];
     },
     projects: function () {
