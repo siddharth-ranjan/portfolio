@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- a read (green) that stops above the database (dim) — the cache hit -->
+  <rect width="32" height="32" rx="7" fill="#080b10"/>
+  <g fill="none" stroke="#8996a9" stroke-width="2.6">
+    <ellipse cx="16" cy="19.5" rx="8" ry="2.8"/>
+    <path d="M8 19.5v5.2c0 1.6 3.6 2.8 8 2.8s8-1.2 8-2.8v-5.2"/>
+  </g>
+  <rect x="12" y="4.5" width="8" height="8" fill="#6edaa0"/>
+</svg>

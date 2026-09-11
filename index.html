@@ -1,14 +1,346 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <link href="/src/index.css" rel="stylesheet">
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Siddharth Ranjan — Backend · Distributed Systems</title>
+<meta name="description" content="Siddharth Ranjan — backend engineer working on distributed systems in Java 21, Spring Boot, Kafka, Redis and Postgres.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=21">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+</head>
+<body>
+<a class="skip" href="#flow">Skip to content</a>
+
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <div class="brand">
+      <span class="brand-name">Siddharth Ranjan</span>
+      <span class="brand-tag">Backend · Distributed Systems</span>
+    </div>
+    <nav class="nav" aria-label="Primary">
+      <a href="#flow">Flow</a>
+      <a href="#services">Services</a>
+      <a href="#shell">Shell</a>
+      <a href="#resume">Résumé</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="theme" role="group" aria-label="Color theme">
+      <button type="button" data-theme-set="dark" class="is-on">Dark</button>
+      <button type="button" data-theme-set="light">Light</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ── HERO ─────────────────────────────────────────────── -->
+<section class="hero wrap">
+  <div class="hero-copy">
+    <p class="hero-id">
+      <span class="hero-name">Siddharth Ranjan</span>
+      <span class="hero-role"><i class="live-dot" aria-hidden="true"></i>Backend engineer · India · open to roles</span>
+    </p>
+    <h1>Most reads<br>should never<br>reach the<br>database.</h1>
+    <p class="lede">Getting there is the work: a cache that absorbs the reads, stateless services
+      behind a load balancer, and an event log that lets the slow parts happen later. Java 21,
+      Spring Boot, Kafka, Redis, Postgres.</p>
+  </div>
+  <dl class="spec" aria-label="Stack">
+    <div><dt>Language</dt><dd>Java 21 · Python 3.12</dd></div>
+    <div><dt>Framework</dt><dd>Spring Boot / MVC</dd></div>
+    <div><dt>Event bus</dt><dd>Kafka (KRaft)</dd></div>
+    <div><dt>Cache · Locks</dt><dd>Redis 7</dd></div>
+    <div><dt>Store</dt><dd>Postgres 16 + pgvector</dd></div>
+    <div><dt>Testing</dt><dd>TDD · PIT mutation</dd></div>
+  </dl>
+</section>
+
+<!-- ── FLOW ─────────────────────────────────────────────── -->
+<section id="flow" class="wrap block">
+  <div class="block-head">
+    <h2>How a request moves</h2>
+    <span class="tag">Solid = blocking · Dashed = async</span>
+  </div>
+  <p class="block-sub">One GET, seven hops, under four milliseconds. Watch where it stops — then
+    evict the key and watch what happens when it doesn't.</p>
+
+  <div class="chain-scroll flow-scroll" id="flow-scroll">
+    <ol class="chain">
+      <li class="hop"><span class="hop-n">01</span>
+        <div class="box"><h3>client</h3><p>browser · mobile · service call</p><span class="ms">0.0ms</span></div>
+      </li>
+      <li class="edge" aria-hidden="true"><span>HTTPS</span></li>
+      <li class="hop"><span class="hop-n">02</span>
+        <div class="box"><h3>cdn</h3><p>static served at the edge</p><span class="ms">1.2ms</span></div>
+      </li>
+      <li class="edge" aria-hidden="true"><span>origin fetch</span></li>
+      <li class="hop"><span class="hop-n">03</span>
+        <div class="box is-focus"><h3>load balancer</h3><p>health checks · least-conn</p><span class="ms">2.0ms</span></div>
+      </li>
+      <li class="edge edge-pool" aria-hidden="true"><div class="lanes">
+      <svg viewBox="0 0 110 90" width="110" height="90">
+        <path class="lane-line ok" data-app="5" d="M0 45 C12 45 12 9 24 9 L86 9 C98 9 98 45 110 45"/>
+        <path class="lane-line ok" data-app="6" d="M0 45 C12 45 12 27 24 27 L86 27 C98 27 98 45 110 45"/>
+        <path class="lane-line ok" data-app="7" d="M0 45 C12 45 12 45 24 45 L86 45 C98 45 98 45 110 45"/>
+        <path class="lane-line bad" data-app="8" d="M0 45 C12 45 12 63 24 63 L86 63 C98 63 98 45 110 45"/>
+        <path class="lane-line warn" data-app="9" d="M0 45 C12 45 12 81 24 81 L86 81 C98 81 98 45 110 45"/>
+      </svg>
+      <span class="lane ok" data-app="5" style="top:9px">app-5</span>
+      <span class="lane ok" data-app="6" style="top:27px">app-6</span>
+      <span class="lane ok" data-app="7" style="top:45px">app-7</span>
+      <span class="lane bad" data-app="8" style="top:63px">app-8</span>
+      <span class="lane warn" data-app="9" style="top:81px">app-9</span>
+      <b class="pool-dot"></b>
+      </div><div class="lanes-v">
+      <svg viewBox="0 0 240 110" width="240" height="110">
+        <path class="lane-line ok" data-app="5" d="M120 0 C120 12 24 12 24 24 L24 86 C24 98 120 98 120 110"/>
+        <path class="lane-line ok" data-app="6" d="M120 0 C120 12 72 12 72 24 L72 86 C72 98 120 98 120 110"/>
+        <path class="lane-line ok" data-app="7" d="M120 0 C120 12 120 12 120 24 L120 86 C120 98 120 98 120 110"/>
+        <path class="lane-line bad" data-app="8" d="M120 0 C120 12 168 12 168 24 L168 86 C168 98 120 98 120 110"/>
+        <path class="lane-line warn" data-app="9" d="M120 0 C120 12 216 12 216 24 L216 86 C216 98 120 98 120 110"/>
+      </svg>
+      <span class="lane ok" data-app="5" style="left:24px;top:55px">app-5</span>
+      <span class="lane ok" data-app="6" style="left:72px;top:55px">app-6</span>
+      <span class="lane ok" data-app="7" style="left:120px;top:55px">app-7</span>
+      <span class="lane bad" data-app="8" style="left:168px;top:55px">app-8</span>
+      <span class="lane warn" data-app="9" style="left:216px;top:55px">app-9</span>
+      <b class="pool-dot"></b>
+      </div></li>
+      <li class="hop"><span class="hop-n">04</span>
+        <div class="box"><h3>api gateway</h3><p>JWT · rate limit · routing</p><span class="ms">2.6ms</span></div>
+      </li>
+      <li class="edge" aria-hidden="true"><span>internal</span></li>
+      <li class="hop"><span class="hop-n">05</span>
+        <div class="box"><h3>service ×3</h3><p>stateless · idempotent writes</p><span class="ms">3.1ms</span></div>
+      </li>
+      <li class="edge" aria-hidden="true"><span>cache-aside</span></li>
+      <li class="hop"><span class="hop-n">06</span>
+        <div class="box"><h3>redis</h3><p>most reads end right here</p><span class="ms">3.5ms</span></div>
+      </li>
+      <li class="edge" aria-hidden="true"><span>on miss only</span></li>
+      <li class="hop"><span class="hop-n">07</span>
+        <div class="box is-dashed"><h3>postgres</h3><p>source of truth · read replicas</p><span class="ms">+12ms on miss</span></div>
+      </li>
+    </ol>
+    <div class="return-rail" aria-hidden="true">
+      <span class="packet-back"></span>
+      <span class="return-label" id="rail-label">← 200 OK · 3.9ms · cache hit</span>
+    </div>
+  </div>
+  <div class="flow-meta">
+    <span class="return-label-m" id="rail-label-m" aria-hidden="true">← 200 OK · 3.9ms · cache hit</span>
+    <span class="tag" id="flow-stats">Live · one GET every few seconds</span>
+    <button type="button" class="flow-btn" id="flow-toggle" aria-pressed="false">Pause motion</button>
+  </div>
+</section>
+
+<!-- ── HOP DETAIL ───────────────────────────────────────── -->
+<section class="wrap block-tight">
+  <div class="panel">
+    <div class="panel-head">
+      <span class="tag">Hop 03 — why that hop exists</span>
+      <span class="tag">Health check <code>/healthz</code> every 2s</span>
+    </div>
+    <div class="panel-body">
+      <div class="panel-left">
+        <h3 class="panel-title">The pool changes size<br>while the URL does not</h3>
+        <dl class="spec spec-flush">
+          <div><dt>Algorithm</dt><dd>least-connections</dd></div>
+          <div><dt>Target</dt><dd>65% cpu per instance</dd></div>
+          <div><dt>Bounds</dt><dd>min 3 · max 12</dd></div>
+          <div><dt>Cooldown</dt><dd>120s between actions</dd></div>
+          <div><dt>Unhealthy</dt><dd>2 failed checks → eject</dd></div>
+        </dl>
+      </div>
+      <div class="panel-right">
+        <ul class="pool">
+          <li><span class="node">app-5</span><span class="pill ok">healthy</span>
+            <span class="bar"><i class="fill ok" style="--w:61%"></i></span><span class="load">61%</span></li>
+          <li><span class="node">app-6</span><span class="pill ok">healthy</span>
+            <span class="bar"><i class="fill ok" style="--w:58%"></i></span><span class="load">58%</span></li>
+          <li><span class="node">app-7</span><span class="pill ok">healthy</span>
+            <span class="bar"><i class="fill ok" style="--w:74%"></i></span><span class="load">74%</span></li>
+          <li class="dim"><span class="node">app-8</span><span class="pill bad">drained</span>
+            <span class="bar"><i class="fill" style="--w:0%"></i></span><span class="load">ejected</span></li>
+          <li><span class="node">app-9</span><span class="pill warn">booting</span>
+            <span class="bar"><i class="fill warn" style="--w:12%"></i></span><span class="load">warm-up</span></li>
+        </ul>
+        <p class="note"><b class="warn-t">Scale-out</b> — app-8 failed two checks and left the rotation;
+          app-9 was added and takes no traffic until warm-up passes. The client saw neither event.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── ASYNC ────────────────────────────────────────────── -->
+<section class="wrap block">
+  <div class="block-head">
+    <h2>And what happens after the response</h2>
+    <span class="tag">The caller never waits for this</span>
+  </div>
+
+  <div class="chain-scroll">
+    <ol class="chain chain-async">
+      <li class="hop"><span class="hop-n warn-t">05</span>
+        <div class="box"><h3>service</h3><p>commits state, then the event</p></div>
+      </li>
+      <li class="edge edge-async edge-long" aria-hidden="true"><span>outbox relay</span></li>
+      <li class="hop"><span class="hop-n warn-t">06</span>
+        <div class="box is-amber"><h3>kafka</h3><p>partitioned by key · replayable</p></div>
+      </li>
+      <li class="edge edge-async edge-long edge-fan" aria-hidden="true"><span>fan-out</span></li>
+      <li class="hop hop-group"><span class="hop-n">07 — independent consumers</span>
+        <div class="group">
+          <div class="box"><h3>notifier</h3><p>email, push, webhooks</p></div>
+          <div class="box"><h3>projector</h3><p>builds the read model</p></div>
+          <div class="box"><h3>analytics</h3><p>warehouse sink</p></div>
+        </div>
+      </li>
+    </ol>
+  </div>
+
+  <p class="note note-rule"><b class="warn-t">Note</b> — consumers are idempotent because at-least-once
+    delivery means redelivery is normal. A poison message goes to a dead-letter topic so one bad payload
+    cannot stall a partition.</p>
+</section>
+
+<!-- ── OWNERSHIP ────────────────────────────────────────── -->
+<section id="services" class="wrap block">
+  <div class="block-head">
+    <h2>Who owns which hop</h2>
+    <span class="tag">Database per service · no shared schema</span>
+  </div>
+  <ul class="owns">
+    <li style="--c:var(--blue)"><span class="o-name">load balancer</span><span class="o-mid">public TLS → healthy instances</span><span class="o-own">owns nothing — routing only</span></li>
+    <li style="--c:var(--blue)"><span class="o-name">api gateway</span><span class="o-mid">auth, quota → internal routes</span><span class="o-own">owns rate-limit counters</span></li>
+    <li style="--c:var(--green)"><span class="o-name">service (×N)</span><span class="o-mid">REST in → cache, DB, outbox</span><span class="o-own">owns its own schema</span></li>
+    <li style="--c:var(--amber)"><span class="o-name">cache</span><span class="o-mid">read-through on every GET</span><span class="o-own">owns nothing durable — TTL only</span></li>
+    <li style="--c:var(--amber)"><span class="o-name">event log</span><span class="o-mid">outbox → partitioned topics</span><span class="o-own">owns the ordering guarantee</span></li>
+    <li style="--c:var(--rose)"><span class="o-name">database</span><span class="o-mid">primary writes, replica reads</span><span class="o-own">owns the source of truth</span></li>
+  </ul>
+</section>
+
+<!-- ── SHELL ────────────────────────────────────────────── -->
+<section id="shell" class="wrap block-tight">
+  <div class="panel term" id="term">
+    <div class="panel-head">
+      <span class="tag">Shell — try <code>trace</code></span>
+      <div class="term-keys">
+        <button type="button" data-cmd="flow">flow</button>
+        <button type="button" data-cmd="cache">cache</button>
+        <button type="button" data-cmd="scale">scale</button>
+        <button type="button" data-cmd="failure">failure</button>
+        <button type="button" data-cmd="whoami">whoami</button>
+      </div>
+    </div>
+    <div class="term-body" id="term-body" role="log" aria-live="polite" aria-label="Terminal output">
+      <div class="line dim">sr-shell 1.0 — type <code>help</code> for commands</div>
+      <div class="line"><span class="ps">$</span> <span class="cmd">whoami</span></div>
+      <div class="line ok-t">siddharth-ranjan · backend engineer · Java 21 / Spring Boot</div>
+      <div class="line dim">distributed systems · event-driven · Kafka, Redis, Postgres</div>
+      <div class="line prompt-line"><span class="ps">$</span><span class="typed" id="typed" aria-hidden="true"></span><span class="caret" aria-hidden="true"></span><input class="term-input" id="term-input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-label="Type a shell command, then press Enter"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TRACK RECORD ─────────────────────────────────────── -->
+<section id="record" class="wrap block">
+  <div class="block-head"><h2>Track record</h2></div>
+  <ul class="record">
+    <li><span class="badge badge-active">active</span><a class="r-name" href="https://www.tcs.com" target="_blank" rel="noopener">TCS</a><span class="r-desc">System Engineer C1 — Prime · Spring Boot, EC2, Redis caching, Kafka ingest</span><span class="r-when">Jan 2026 →</span></li>
+    <li><span class="badge badge-resolved">resolved</span><a class="r-name" href="https://www.nokia.com" target="_blank" rel="noopener">Nokia</a><span class="r-desc">R&amp;D Intern, FN BBN CU-Hardening · test-data aggregation tooling, −30% reporting effort</span><span class="r-when">Aug 24 – May 25</span></li>
+    <li><span class="badge badge-build">build</span><span class="r-name">vigil</span><span class="r-desc">Incident intelligence — alert firehose to correlated incidents, human-approved remediation</span><span class="r-when">Sept 2026 →</span></li>
+    <li><span class="badge badge-shipped">shipped</span><a class="r-name" href="https://github.com/siddharth-ranjan/multi-pdf-chat" target="_blank" rel="noopener">multi-pdf-chat</a><span class="r-desc">GenAI document QA over LangChain + FAISS, Google Generative AI</span><span class="r-when">Feb 2024</span></li>
+    <li><span class="badge badge-shipped">shipped</span><a class="r-name" href="https://github.com/siddharth-ranjan/movie-reservation-system" target="_blank" rel="noopener">movie-reservation</a><span class="r-desc">Spring Modulith backend, JWT auth, role-based access control</span><span class="r-when">2025</span></li>
+    <li><span class="badge badge-published">published</span><a class="r-name" href="https://ieeexplore.ieee.org/document/10675697" target="_blank" rel="noopener">IEEE</a><span class="r-desc">Performance assessment of recommendation algorithms — SVD, SVD++, k-NN on MovieLens</span><span class="r-when">2024</span></li>
+  </ul>
+</section>
+
+<!-- ── RÉSUMÉ PREVIEW ───────────────────────────────────── -->
+<section id="resume" class="wrap block">
+  <div class="block-head">
+    <h2>Résumé</h2>
+    <span class="tag">Latest · Sept 2026</span>
+  </div>
+  <div class="panel cv">
+    <div class="panel-head">
+      <span class="tag">GET /resume.pdf · 200 OK · 1 page</span>
+      <div class="cv-actions">
+        <button type="button" class="flow-btn" id="cv-toggle" aria-expanded="false" aria-controls="cv-body">Preview résumé</button>
+        <a class="flow-btn" href="assets/resume.pdf" target="_blank" rel="noopener">Open PDF ↗</a>
+      </div>
+    </div>
+    <!-- stays closed until the Preview button is pressed; the PDF loads on first open -->
+    <div class="cv-body" id="cv-body" data-src="assets/resume.pdf" data-img="assets/resume.png" hidden></div>
+  </div>
+</section>
+
+<!-- ── CONTACT ──────────────────────────────────────────── -->
+<section id="contact" class="wrap block">
+  <div class="block-head">
+    <h2>Send a request</h2>
+    <span class="tag">POST /v1/messages · async · reply by email</span>
+  </div>
+  <div class="contact-grid">
+    <form class="req-form" id="req-form" novalidate>
+      <label class="field">
+        <span class="field-k">from <em>name · company</em></span>
+        <input name="from" required autocomplete="name" placeholder="Ada Lovelace · Analytical Engines Ltd">
+      </label>
+      <label class="field">
+        <span class="field-k">reply_to <em>where I answer</em></span>
+        <input name="reply_to" type="email" required autocomplete="email" placeholder="ada@engines.io">
+      </label>
+      <fieldset class="field">
+        <legend class="field-k">route <em>what it's about</em></legend>
+        <div class="routes">
+          <label class="route"><input type="radio" name="route" value="/roles" checked><span>/roles <small>backend role</small></span></label>
+          <label class="route"><input type="radio" name="route" value="/contract"><span>/contract <small>contract work</small></span></label>
+          <label class="route"><input type="radio" name="route" value="/collab"><span>/collab <small>build something</small></span></label>
+          <label class="route"><input type="radio" name="route" value="/hello"><span>/hello <small>just saying hi</small></span></label>
+        </div>
+      </fieldset>
+      <label class="field">
+        <span class="field-k">payload <em>the message</em></span>
+        <textarea name="payload" required rows="6" placeholder="We're moving order events from a nightly cron job to Kafka and need someone who has shipped a transactional outbox before…"></textarea>
+      </label>
+      <div class="req-actions">
+        <button class="btn btn-solid" type="submit">Send request →</button>
+        <span class="req-status" id="req-status" role="status" aria-live="polite">Opens your mail app with this filled in.</span>
+      </div>
+    </form>
+    <div class="req-side" aria-hidden="true">
+      <span class="tag">Live request preview</span>
+      <pre class="req-preview" id="req-preview"></pre>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="cta">
+  <div class="wrap cta-in">
+    <div>
+      <h2>Open to backend roles</h2>
+      <p class="contact">
+        <a href="mailto:siddharthranjan0909@gmail.com">siddharthranjan0909@gmail.com</a>
+        <span aria-hidden="true">·</span> India
+      </p>
+    </div>
+    <div class="cta-btns">
+      <a class="btn btn-solid" href="#contact">Email me</a>
+      <a class="btn" href="https://github.com/siddharth-ranjan" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn" href="https://www.linkedin.com/in/siddharth-ranjan09/" target="_blank" rel="noopener">LinkedIn</a>
+      <a class="btn" href="https://leetcode.com/u/sid0909/" target="_blank" rel="noopener">LeetCode</a>
+    </div>
+  </div>
+</footer>
+
+<script src="script.js?v=21"></script>
+</body>
 </html>
