@@ -501,9 +501,9 @@ section[id]{scroll-margin-top:80px}
   font-size:16px;background:transparent;color:transparent;caret-color:transparent}
 .term-body{cursor:text}
 .term-body:focus-within .caret{background:var(--accent)}
-.typed:empty::before{content:"click to type";color:var(--faint)}
-@media (hover:none){.typed:empty::before{content:"tap to type"}}
-.term-body:focus-within .typed:empty::before{content:none}
+.prompt-line.is-empty .typed::before{content:"click to type";color:var(--faint)}
+@media (hover:none){.prompt-line.is-empty .typed::before{content:"tap to type"}}
+.term-body:focus-within .prompt-line .typed::before{content:none}
 
 /* ── résumé panel: closed by default ────────────────────── */
 .cv-actions{display:flex;gap:10px;flex-wrap:wrap}
@@ -539,3 +539,11 @@ section[id]{scroll-margin-top:80px}
   .hop-group .box{height:58px;min-height:0}
   .hop-group .group::before{top:29px;bottom:29px}
 }
+
+/* ── shell cursor: a block over the character at the cursor, like a real terminal ── */
+.caret{display:inline-block;width:auto;min-width:1ch;height:auto;vertical-align:baseline;line-height:inherit;
+  background:var(--text);color:var(--panel-2);animation:blink-block 1.05s steps(1) infinite}
+@keyframes blink-block{50%{background:transparent;color:inherit}}
+.term-body:focus-within .caret{background:var(--accent);color:var(--panel-2)}
+[data-theme="light"] .caret{background:#e9eef7;color:#0e141d}
+[data-theme="light"] .term-body:focus-within .caret{background:#9dc2ee;color:#0e141d}
