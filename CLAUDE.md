@@ -1,43 +1,47 @@
 # Portfolio — siddharthranjan.me
 
-Static site: plain HTML/CSS/JS, no build step, no backend. Deployed on Vercel from
-`siddharth-ranjan/portfolio` (`main` = production). Custom domain: siddharthranjan.me (+ www).
+React + Vite app, no backend. Deployed on Vercel from `siddharth-ranjan/portfolio`
+(`main` = production). Custom domain: siddharthranjan.me (+ www).
 
-## Files
-    index.html    all markup and copy
-    styles.css    tokens, layout, dark/light themes, responsive rules
-    script.js     one IIFE: theme, brand reveal, scroll reveal, pool drift,
-                  live request flow, résumé toggle, contact form, scrollspy, shell
-    favicon.svg   site icon (a read stopping above a database) + PNGs in assets/
-    assets/       resume.pdf (+ resume.png page image), icons
-    serve.py      local dev server with Cache-Control: no-store
-    vercel.json   framework:null, no install/build, serve repo root; /resume and /image redirects
-    .vercelignore README.md, CLAUDE.md, serve.py — in the repo, not on the domain
+## Layout
+    src/main.jsx        entry, imports styles.css
+    src/App.jsx         composition, brand reveal, scrollspy, FlowContext (evict bridge)
+    src/styles.css      the whole design system — tokens, layout, themes, responsive
+    src/components/     one per section (Flow and Shell are the involved ones)
+    src/hooks/          useTheme useReveal usePool useFlow useScrollSpy
+    src/shell/commands.js  command map, Damerau–Levenshtein suggestions
+    public/             favicon.svg + assets/ (resume.pdf, resume.png, icons) → served at /
 
 ## Run / deploy
-    python3 serve.py     # http://localhost:8000
-Push to `main` → Vercel production build (~20s). Edit in a clone of the repo, not a loose folder.
+    npm install && npm run dev     # dev
+    npm run build && npm run preview
+Push to `main` → Vercel production build. `vercel.json` pins framework vite,
+`npm run build`, output `dist`, and keeps the /resume and /image redirects.
 
 ## Conventions
-- Bump `?v=N` on styles.css/script.js in index.html with every CSS/JS change (browsers cache hard).
-- Sections: hero · flow · hop-03 panel · async · ownership · shell · record · résumé · contact.
-- Chain geometry: hop number is a fixed 16px + 8px gap, so connectors sit at `50% + 12px`
-  (desktop). Below 1100px both chains switch to a vertical layout — motion switches axis in JS
-  (`vertical()`), and the load-balancer fan uses the separate `.lanes-v` SVG.
-- Motion plays even under prefers-reduced-motion (it is the content); "Pause motion" freezes
-  everything via `.motion-paused`. Scroll-reveal stays off under reduced motion.
-- Shell commands live in the `COMMANDS` map. Unknown input gets prefix/edit-distance suggestions.
-- Résumé: `assets/resume.pdf` is the latest CV with the phone number redacted out; regenerate the
-  image with `pdftoppm -r 150 -png -singlefile assets/resume.pdf assets/resume`. The same PDF is
-  mirrored in the `siddharth-ranjan/resume` repo.
+- Vite hashes bundle filenames, so no manual cache-busting (the old `?v=N` is gone).
+- `styles.css` is deliberately global and unchanged from the static version; class
+  names in JSX must match it exactly. Ids kept where CSS or tests rely on them
+  (#flow-scroll, #term-input, #cv-body, #theme-switch, #req-preview …).
+- `useFlow` stays imperative: it measures geometry and drives Web Animations,
+  including on ::after pseudo-elements, which React cannot express. React owns
+  only the counter, the response label and the paused state. It must clean up on
+  unmount (StrictMode mounts effects twice in dev).
+- Chain geometry: the hop number is a fixed 16px + 8px gap, so connectors sit at
+  `50% + 12px` (desktop). Below 1100px both chains go vertical — motion switches
+  axis via `vertical()`, and the fan uses the separate `.lanes-v` SVG.
+- Motion plays even under prefers-reduced-motion (it is the content); *Pause
+  motion* freezes it via `.motion-paused`. Scroll-reveal stays off under reduced motion.
+- The shell input is uncontrolled on purpose: its own cursor position is the
+  truth and the prompt mirrors it.
 
 ## What is real vs illustrative
-Real: track record, résumé, links, contact form (opens the visitor's mail app; no backend).
-Illustrative: request latencies, cache hit/miss counter, instance pool numbers and drift,
-least-connections lane picks, shell output. It is a scripted demo, not live telemetry.
+Real: track record, résumé, links, contact form (opens the visitor's mail app).
+Illustrative: latencies, cache hit/miss counter, pool numbers and drift, lane
+picks, shell output. A scripted demo, not live telemetry.
 
 ## Open ideas (not done)
-- Label the hop-03 pool as simulated, or make instances clickable to fail a health check.
+- Label the hop-03 pool as simulated, or let instances be failed by clicking.
 - Track record vs résumé mismatch: résumé lists Blogging Platform Backend + certifications.
 - Résumé contact line sits ~41pt right of centre after redaction; a LaTeX rebuild would centre it.
 - Diagram says "postgres" while the stack row says MySQL.
