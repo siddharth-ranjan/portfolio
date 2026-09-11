@@ -501,9 +501,9 @@ section[id]{scroll-margin-top:80px}
   font-size:16px;background:transparent;color:transparent;caret-color:transparent}
 .term-body{cursor:text}
 .term-body:focus-within .caret{background:var(--accent)}
-.typed:empty::before{content:"click to type";color:var(--faint)}
-@media (hover:none){.typed:empty::before{content:"tap to type"}}
-.term-body:focus-within .typed:empty::before{content:none}
+.prompt-line.is-empty .typed::before{content:"click to type";color:var(--faint)}
+@media (hover:none){.prompt-line.is-empty .typed::before{content:"tap to type"}}
+.term-body:focus-within .prompt-line .typed::before{content:none}
 
 /* ── résumé panel: closed by default ────────────────────── */
 .cv-actions{display:flex;gap:10px;flex-wrap:wrap}
@@ -515,6 +515,17 @@ section[id]{scroll-margin-top:80px}
 /* ── top-bar name stays out of the way while the hero name is on screen ── */
 .brand{transition:opacity .25s ease,transform .25s ease,visibility .25s}
 .topbar.brand-hidden .brand{opacity:0;visibility:hidden;transform:translateY(-4px)}
+
+/* ── theme switch: square track, square block — a hardware switch, not a phone pill ── */
+.theme-switch{display:flex;align-items:center;gap:10px;flex:none;padding:4px 0;border:0;background:none;cursor:pointer;
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);transition:color .15s}
+.theme-switch:hover{color:var(--text)}
+.ts-track{position:relative;width:36px;height:18px;border:1px solid var(--line);background:var(--bg-2);transition:border-color .15s}
+.theme-switch:hover .ts-track{border-color:var(--accent)}
+.ts-knob{position:absolute;top:2px;left:2px;width:12px;height:12px;background:var(--text);
+  transition:transform .22s cubic-bezier(.4,0,.2,1)}
+[data-theme="light"] .ts-knob{transform:translateX(18px)}
+.ts-label{min-width:5.5ch;text-align:left}
 
 /* ── desktop chain geometry: every connector lines up with box centres ──
    the hop number above each box is a fixed 16px + 8px gap, so a box's centre
@@ -528,3 +539,11 @@ section[id]{scroll-margin-top:80px}
   .hop-group .box{height:58px;min-height:0}
   .hop-group .group::before{top:29px;bottom:29px}
 }
+
+/* ── shell cursor: a block over the character at the cursor, like a real terminal ── */
+.caret{display:inline-block;width:auto;min-width:1ch;height:auto;vertical-align:baseline;line-height:inherit;
+  background:var(--text);color:var(--panel-2);animation:blink-block 1.05s steps(1) infinite}
+@keyframes blink-block{50%{background:transparent;color:inherit}}
+.term-body:focus-within .caret{background:var(--accent);color:var(--panel-2)}
+[data-theme="light"] .caret{background:#e9eef7;color:#0e141d}
+[data-theme="light"] .term-body:focus-within .caret{background:#9dc2ee;color:#0e141d}

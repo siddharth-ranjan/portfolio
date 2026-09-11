@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=24">
+<link rel="stylesheet" href="styles.css?v=26">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
@@ -29,10 +29,10 @@
       <a href="#resume">Résumé</a>
       <a href="#contact">Contact</a>
     </nav>
-    <div class="theme" role="group" aria-label="Color theme">
-      <button type="button" data-theme-set="dark" class="is-on">Dark</button>
-      <button type="button" data-theme-set="light">Light</button>
-    </div>
+    <button type="button" class="theme-switch" id="theme-switch" role="switch" aria-checked="true" aria-label="Dark theme">
+      <span class="ts-track" aria-hidden="true"><span class="ts-knob"></span></span>
+      <span class="ts-label">Dark</span>
+    </button>
   </div>
 </header>
 
@@ -245,7 +245,7 @@
       <div class="line"><span class="ps">$</span> <span class="cmd">whoami</span></div>
       <div class="line ok-t">siddharth-ranjan · backend engineer · Java / Spring Boot</div>
       <div class="line dim">distributed systems · event-driven · Kafka, Redis, MySQL</div>
-      <div class="line prompt-line"><span class="ps">$</span><span class="typed" id="typed" aria-hidden="true"></span><span class="caret" aria-hidden="true"></span><input class="term-input" id="term-input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-label="Type a shell command, then press Enter"></div>
+      <div class="line prompt-line"><span class="ps">$</span><span class="typed" id="typed" aria-hidden="true"></span><span class="caret" id="caret" aria-hidden="true"></span><span class="typed-after" id="typed-after" aria-hidden="true"></span><input class="term-input" id="term-input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-label="Type a shell command, then press Enter"></div>
     </div>
   </div>
 </section>
@@ -343,6 +343,6 @@
   </div>
 </footer>
 
-<script src="script.js?v=21"></script>
+<script src="script.js?v=26"></script>
 </body>
 </html>

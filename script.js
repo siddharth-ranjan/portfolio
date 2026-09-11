@@ -3,22 +3,22 @@
 
   /* ── theme ──────────────────────────────────────────── */
   var root = document.documentElement;
-  var stored = null;
-  try { stored = localStorage.getItem('theme'); } catch (e) {}
-  if (stored === 'light' || stored === 'dark') setTheme(stored);
+  var themeSwitch = document.getElementById('theme-switch');
 
   function setTheme(t) {
     root.setAttribute('data-theme', t);
     try { localStorage.setItem('theme', t); } catch (e) {}
-    document.querySelectorAll('[data-theme-set]').forEach(function (b) {
-      b.classList.toggle('is-on', b.dataset.themeSet === t);
-      b.setAttribute('aria-pressed', String(b.dataset.themeSet === t));
-    });
+    if (!themeSwitch) return;
+    // the switch is "on" for dark: block left = dark, right = light
+    themeSwitch.setAttribute('aria-checked', String(t === 'dark'));
+    themeSwitch.querySelector('.ts-label').textContent = t === 'dark' ? 'Dark' : 'Light';
   }
-  document.querySelectorAll('[data-theme-set]').forEach(function (b) {
-    b.addEventListener('click', function () { setTheme(b.dataset.themeSet); });
+  var stored = null;
+  try { stored = localStorage.getItem('theme'); } catch (e) {}
+  setTheme(stored === 'light' || stored === 'dark' ? stored : root.getAttribute('data-theme'));
+  if (themeSwitch) themeSwitch.addEventListener('click', function () {
+    setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
   });
-  setTheme(root.getAttribute('data-theme'));
 
   /* ── top-bar name: only once the hero name has scrolled away ── */
   var topbar = document.querySelector('.topbar');
@@ -366,6 +366,8 @@
   var typed = document.getElementById('typed');
   var input = document.getElementById('term-input');
   if (!term || !typed || !input) return;
+  var caretEl = document.getElementById('caret');
+  var afterEl = document.getElementById('typed-after');
   var promptLine = typed.closest('.prompt-line');
   var touch = matchMedia('(hover: none)').matches;
   var history = [];
@@ -518,8 +520,33 @@
 
   var busy = false;
 
+  // Damerau–Levenshtein (optimal string alignment): a swapped pair of letters counts as one slip
+  function distance(a, b) {
+    var d = [], i, j;
+    for (i = 0; i <= a.length; i++) d[i] = [i];
+    for (j = 1; j <= b.length; j++) d[0][j] = j;
+    for (i = 1; i <= a.length; i++) {
+      for (j = 1; j <= b.length; j++) {
+        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+        if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+      }
+    }
+    return d[a.length][b.length];
+  }
+  // prefixes first ("ev" → evict), then the closest names within one slip (short words) or two
+  function suggest(cmd) {
+    var names = Object.keys(COMMANDS);
+    var prefixed = names.filter(function (n) { return n.indexOf(cmd) === 0; });
+    if (prefixed.length) return prefixed;
+    var limit = cmd.length <= 3 ? 1 : 2;
+    var near = names.map(function (n) { return [n, distance(cmd, n)]; })
+      .filter(function (p) { return p[1] <= limit; })
+      .sort(function (a, b) { return a[1] - b[1]; });
+    return near.filter(function (p) { return p[1] === (near[0] && near[0][1]); }).map(function (p) { return p[0]; });
+  }
+
   function run(raw) {
-    var cmd = raw.trim().toLowerCase();
+    var cmd = raw.trim().toLowerCase().split(/\s+/)[0] || '';
     echo(raw);
     if (!cmd) return;
     history.unshift(raw);
@@ -527,7 +554,16 @@
 
     var handler = COMMANDS[cmd];
     if (!handler) {
-      push('warn', 'sr-shell: ' + cmd + ': command not found — type `help`');
+      push('warn', 'sr-shell: ' + cmd + ': command not found');
+      var guesses = suggest(cmd);
+      if (guesses.length === 1) {
+        push('dim', 'did you mean `' + guesses[0] + '`? press Enter to run it');
+        setLine(guesses[0]);
+      } else if (guesses.length) {
+        push('dim', 'did you mean ' + guesses.map(function (g) { return '`' + g + '`'; }).join(' or ') + '?');
+      } else {
+        push('dim', 'type `help` for the list');
+      }
       return;
     }
     if (handler === 'clear') {
@@ -552,12 +588,27 @@
 
   // the input is invisible so phone keyboards have something to type into;
   // the prompt line mirrors whatever is in it
-  function render() { typed.textContent = input.value; }
-  function setLine(v) { input.value = v; render(); }
+  function render() {
+    var v = input.value;
+    var i = input.selectionStart == null ? v.length : input.selectionStart;
+    typed.textContent = v.slice(0, i);
+    caretEl.textContent = v.charAt(i) || '\u00a0';
+    afterEl.textContent = v.slice(i + 1);
+    promptLine.classList.toggle('is-empty', !v);
+  }
+  function setLine(v) {
+    input.value = v;
+    input.setSelectionRange(v.length, v.length);
+    render();
+  }
   render();
 
   term.addEventListener('click', function () { input.focus({ preventScroll: true }); });
   input.addEventListener('input', render);
+  // arrows, Home/End and clicks move the cursor without an input event
+  input.addEventListener('keyup', render);
+  input.addEventListener('select', render);
+  document.addEventListener('selectionchange', function () { if (document.activeElement === input) render(); });
 
   input.addEventListener('keydown', function (e) {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -577,6 +628,9 @@
       var m = Object.keys(COMMANDS).filter(function (k) { return k.indexOf(input.value.trim()) === 0; });
       if (m.length === 1) setLine(m[0]);
       else if (m.length > 1) { echo(input.value); push('dim', m.join('  ')); }
+    } else {
+      // Left/Right/Home/End: let the input move its cursor, then redraw
+      setTimeout(render, 0);
     }
   });
 
