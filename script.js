@@ -476,7 +476,7 @@
         ['ok', '  github.com/siddharth-ranjan'],
         ['ok', '  linkedin.com/in/siddharth-ranjan09'],
         ['ok', '  leetcode.com/u/sid0909'],
-        ['dim', '  Kolkata, IN — open to backend roles'],
+        ['dim', '  India — open to backend roles'],
         ['', '  or send a request with the form at #contact ↓']
       ];
     },
