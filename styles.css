@@ -526,3 +526,16 @@ section[id]{scroll-margin-top:80px}
   transition:transform .22s cubic-bezier(.4,0,.2,1)}
 [data-theme="light"] .ts-knob{transform:translateX(18px)}
 .ts-label{min-width:5.5ch;text-align:left}
+
+/* ── desktop chain geometry: every connector lines up with box centres ──
+   the hop number above each box is a fixed 16px + 8px gap, so a box's centre
+   sits exactly 12px below the middle of its row */
+@media (min-width:1101px){
+  .hop-n{display:block;height:16px;line-height:16px}
+  .edge::before{top:calc(50% + 12px)}
+  .edge::after{top:calc(50% + 12px - 3.5px)}
+  .lanes{top:calc(50% + 12px - 45px)}
+  /* consumers share one height, so the spine can start and end on their centres */
+  .hop-group .box{height:58px;min-height:0}
+  .hop-group .group::before{top:29px;bottom:29px}
+}
