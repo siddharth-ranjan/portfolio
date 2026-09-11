@@ -3,5 +3,9 @@
   "framework": null,
   "installCommand": "",
   "buildCommand": "",
-  "outputDirectory": "."
+  "outputDirectory": ".",
+  "redirects": [
+    { "source": "/resume", "destination": "/#resume", "permanent": false },
+    { "source": "/image", "destination": "/", "permanent": false }
+  ]
 }
