@@ -11,13 +11,13 @@ const vertical = () => matchMedia('(max-width:1100px)').matches;
  * express. React owns only what is rendered as text: the counter, the response
  * label and the paused state.
  */
-export function useFlow(flowRef, railRef, { onStats, onLabel }) {
+export function useFlow(flowRef, railRef, { onStats, onLabel, onEvict }) {
   const [running, setRunning] = useState(true);
   const evictRef = useRef(() => 'unavailable');
   const runningRef = useRef(true);
   const flushRef = useRef(null);
-  const cbs = useRef({ onStats, onLabel });
-  cbs.current = { onStats, onLabel };
+  const cbs = useRef({ onStats, onLabel, onEvict });
+  cbs.current = { onStats, onLabel, onEvict };
 
   useEffect(() => {
     const flow = flowRef.current;
@@ -153,6 +153,7 @@ export function useFlow(flowRef, railRef, { onStats, onLabel }) {
       if (evicted) return 'pending';
       evicted = true;
       redis.classList.add('is-evicted');
+      if (cbs.current.onEvict) cbs.current.onEvict();
       return live() ? 'ok' : 'paused';
     };
     const onEvictClick = () => evictRef.current();
