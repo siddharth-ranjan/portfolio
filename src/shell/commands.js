@@ -27,7 +27,7 @@ export function buildCommands(evict) {
       ['dim', '04 api gateway   JWT · rate limit · routing           2.6ms'],
       ['dim', '05 service ×3    stateless · idempotent writes        3.1ms'],
       ['dim', '06 redis         most reads end right here            3.5ms'],
-      ['dim', '07 postgres      source of truth · on miss only     +12.0ms'],
+      ['dim', '07 mysql         source of truth · on miss only     +12.0ms'],
       ['ok', '← 200 OK · 3.9ms · cache hit']
     ],
     trace: () => ({
@@ -39,7 +39,7 @@ export function buildCommands(evict) {
         ['', '  04 api gateway   2.6ms   jwt ok · quota 118/500'],
         ['', '  05 service       3.1ms   cache-aside lookup'],
         ['', '  06 redis         3.5ms   HIT orders:8821 (ttl 42s)'],
-        ['warn', '  -- postgres never touched on this path'],
+        ['warn', '  -- mysql never touched on this path'],
         ['ok', '← 200 OK · 3.9ms · cache hit']
       ]
     }),
@@ -61,7 +61,7 @@ export function buildCommands(evict) {
     failure: () => [
       ['', 'nothing here assumes the happy path.'],
       ['dim', '  instance dies      health check ejects it in 4s, client sees nothing'],
-      ['dim', '  redis down         reads fall through to postgres, slower not broken'],
+      ['dim', '  redis down         reads fall through to mysql, slower not broken'],
       ['dim', '  consumer lags      backpressure throttles intake, writes still land'],
       ['dim', '  poison message     routed to .DLT, partition keeps moving'],
       ['warn', '  redelivery is normal — every consumer is idempotent']
@@ -81,7 +81,9 @@ export function buildCommands(evict) {
       ['dim', '  [build]      vigil             incident intelligence           Sept 2026 →'],
       ['dim', '  [shipped]    multi-pdf-chat    LangChain + FAISS document QA   Feb 2024'],
       ['dim', '  [shipped]    movie-reservation Spring Modulith, JWT, RBAC      2025'],
-      ['dim', '  [published]  IEEE              recommendation algorithms       2024']
+      ['dim', '  [shipped]    blogging-project  Spring Boot REST, JPA, MySQL    Jan – Feb 2024'],
+      ['dim', '  [published]  IEEE              recommendation algorithms       2024'],
+      ['dim', '  [certified]  Anthropic · Azure Claude Certified Dev · AZ-900 · AI-901']
     ],
     contact: () => [
       ['ok', '  siddharthranjan0909@gmail.com'],
@@ -98,7 +100,7 @@ export function buildCommands(evict) {
       return [
         ['', 'redis> DEL orders:8821'],
         ['dim', '(integer) 1'],
-        ['warn', 'next GET misses the cache, reads postgres (+12ms), and cache-aside refills the key'],
+        ['warn', 'next GET misses the cache, reads mysql (+12ms), and cache-aside refills the key'],
         state === 'paused'
           ? ['dim', 'the flow is paused or off-screen — scroll up to #flow and press Play motion']
           : ['ok', 'watch "how a request moves" above ↑']

@@ -9,8 +9,12 @@ const ROWS = [
     desc: 'GenAI document QA over LangChain + FAISS, Google Generative AI', when: 'Feb 2024' },
   { badge: 'shipped', label: 'shipped', name: 'movie-reservation', href: 'https://github.com/siddharth-ranjan/movie-reservation-system',
     desc: 'Spring Modulith backend, JWT auth, role-based access control', when: '2025' },
+  { badge: 'shipped', label: 'shipped', name: 'blogging-project', href: 'https://github.com/siddharth-ranjan/blogging-project',
+    desc: 'Spring Boot REST backend — registration, posts, likes and comments over Spring Data JPA + MySQL', when: 'Jan – Feb 2024' },
   { badge: 'published', label: 'published', name: 'IEEE', href: 'https://ieeexplore.ieee.org/document/10675697',
-    desc: 'Performance assessment of recommendation algorithms — SVD, SVD++, k-NN on MovieLens', when: '2024' }
+    desc: 'Performance assessment of recommendation algorithms — SVD, SVD++, k-NN on MovieLens', when: '2024' },
+  { badge: 'certified', label: 'certified', name: 'certifications',
+    desc: 'Claude Certified Developer – Foundations (Anthropic) · Microsoft Azure AZ-900 · Azure AI-901', when: '—' }
 ];
 
 export default function TrackRecord() {

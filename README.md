@@ -37,6 +37,9 @@ Push to `main`; Vercel builds with `npm run build` and serves `dist/`
   `clear`. Arrows walk history, Tab completes, a mistyped command suggests the
   closest match. Add commands in `src/shell/commands.js`.
 - **Résumé** — `public/assets/resume.pdf` is the latest CV with the phone number
-  redacted out; phones get `resume.png` instead of the embedded PDF.
+  removed and the contact line re-centred; phones get `resume.png` instead of the
+  embedded PDF.
+- **Hop-03 pool** — labelled *Simulated pool*; click a healthy instance to fail its
+  health checks and watch the pool drain, eject and scale out.
 - **Contact form** — validates in place and opens the visitor's mail app; there
   is no backend.

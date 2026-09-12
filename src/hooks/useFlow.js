@@ -142,7 +142,7 @@ export function useFlow(flowRef, railRef, { onStats, onLabel }) {
           back.classList.remove('on');
           if (!miss) hits++;
           cbs.current.onStats(
-            `Live · ${n} requests · ${hits} cache hits · ${Math.round((hits / n) * 100)}% never reached postgres${HINT}`
+            `Live · ${n} requests · ${hits} cache hits · ${Math.round((hits / n) * 100)}% never reached mysql${HINT}`
           );
           return sleep(1500);
         });
