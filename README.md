@@ -25,6 +25,48 @@ distributed system, with the diagrams animating live.
 Push to `main`; Vercel builds with `npm run build` and serves `dist/`
 (`vercel.json`). Domain: siddharthranjan.app.
 
+## Domains
+
+| Host | Behaviour |
+|---|---|
+| `siddharthranjan.app` | serves the site (primary) |
+| `www.siddharthranjan.app` | 308 → `siddharthranjan.app` |
+| `siddharthranjan.me` | 308 → `siddharthranjan.app` |
+| `www.siddharthranjan.me` | 308 → `siddharthranjan.app` |
+
+`.app` DNS is hosted at Name.com (nameservers stay with Name.com):
+apex `A` → `216.198.79.1`, `CNAME www` → the target Vercel shows under the
+domain (currently `d6b6c1cc938b9fba.vercel-dns-017.com`).
+
+### Changing the primary domain later
+
+For example back to `.me`, or to a new domain:
+
+1. **Vercel** → project → Settings → Domains: add the domain if it is not
+   listed, wait for it to verify, then edit it and choose *Connect to an
+   environment → Production*. Edit the old primary and set it to *Redirect to*
+   the new one (308). Do the same for its `www`.
+2. **DNS** at the new domain's registrar: add the records Vercel lists for it
+   (apex `A` record and `CNAME www`). Leave the old domain's records alone until
+   its redirect is confirmed working.
+3. **Code** — four absolute URLs in `index.html` name the primary domain:
+   `<link rel="canonical">`, `og:url`, `og:image`, `twitter:image`. Find them with
+   `grep -n 'siddharthranjan\.' index.html`, change them, push to `main`.
+   Update the domain in this README and CLAUDE.md too.
+4. **Résumé** — the contact line in `public/assets/resume.pdf` links to the
+   domain; change it in the Overleaf source, export, copy the PDF over, and
+   regenerate `resume.png` (see Notes).
+5. **Link previews** — re-scrape the new URL in LinkedIn's Post Inspector; other
+   apps refresh on their own.
+
+### Retiring `siddharthranjan.me`
+
+Nothing in the code references `.me` any more, so dropping it is DNS-only:
+remove it (and `www.siddharthranjan.me`) from Vercel → Settings → Domains, then
+let it lapse at its registrar. Anyone still using an old `.me` link will get an
+error instead of the redirect from then on, so keep it until old links (résumé
+copies already sent, LinkedIn posts) have aged out.
+
 ## Notes
 
 - **Theme** — switch in the top bar; the choice is saved in `localStorage`.
