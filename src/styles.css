@@ -15,6 +15,7 @@
   --rose:#ef5f7a;
   --teal:#5fd4c8;
   --violet:#b69cf0;
+  --gold:#d8c169;
   --accent:var(--blue);
   --cta-bg:#1c2836;
   --display:'Barlow Condensed', 'Arial Narrow', sans-serif;
@@ -39,6 +40,7 @@
   --rose:#c8324f;
   --teal:#0f8a80;
   --violet:#7147c2;
+  --gold:#8a6d12;
   --cta-bg:#dde3ec;
 }
 
@@ -236,6 +238,8 @@ h2{font-size:clamp(30px,3.6vw,48px)}
 .badge-shipped{--c:var(--blue)}
 .badge-resolved{--c:var(--teal)}
 .badge-published{--c:var(--violet)}
+.badge-certified{--c:var(--gold)}
+.badge-won{--c:var(--rose)}
 .badge-active::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c);
   box-shadow:0 0 0 0 var(--c);animation:beat 1.8s ease-out infinite}
 @keyframes beat{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 60%,transparent)}
@@ -547,3 +551,10 @@ section[id]{scroll-margin-top:80px}
 .term-body:focus-within .caret{background:var(--accent);color:var(--panel-2)}
 [data-theme="light"] .caret{background:#e9eef7;color:#0e141d}
 [data-theme="light"] .term-body:focus-within .caret{background:#9dc2ee;color:#0e141d}
+
+/* ── hop-03 pool: healthy instances can be failed by clicking ─────── */
+.pool li[role="button"]{cursor:pointer}
+.pool li[role="button"] .node{transition:color .15s}
+.pool li[role="button"]:hover .node{color:var(--text)}
+.pool li[role="button"]:hover .bar{border-color:var(--accent)}
+.pool li[role="button"]:focus-visible{outline:2px solid var(--accent);outline-offset:3px}

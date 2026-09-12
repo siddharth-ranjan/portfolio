@@ -8,7 +8,7 @@ React + Vite app, no backend. Deployed on Vercel from `siddharth-ranjan/portfoli
     src/App.jsx         composition, brand reveal, scrollspy, FlowContext (evict bridge)
     src/styles.css      the whole design system — tokens, layout, themes, responsive
     src/components/     one per section (Flow and Shell are the involved ones)
-    src/hooks/          useTheme useReveal usePool useFlow useScrollSpy
+    src/hooks/          useTheme useReveal useFlow useScrollSpy
     src/shell/commands.js  command map, Damerau–Levenshtein suggestions
     public/             favicon.svg + assets/ (resume.pdf, resume.png, icons) → served at /
 
@@ -37,11 +37,18 @@ Push to `main` → Vercel production build. `vercel.json` pins framework vite,
 
 ## What is real vs illustrative
 Real: track record, résumé, links, contact form (opens the visitor's mail app).
-Illustrative: latencies, cache hit/miss counter, pool numbers and drift, lane
-picks, shell output. A scripted demo, not live telemetry.
+Illustrative and labelled as such: the hop-03 pool ("Simulated pool"), latencies,
+cache hit/miss counter, lane picks, shell output. A scripted demo, not telemetry.
+The pool is interactive: clicking a healthy instance drains it, ejects it after two
+failed checks, then boots a replacement that warms up before taking traffic.
+
+## Résumé
+`public/assets/resume.pdf` is exported straight from the Overleaf source with the
+phone number left out — no post-processing. To update: export the PDF from
+Overleaf, copy it over, then regenerate the phone fallback with
+`pdftoppm -r 150 -png -singlefile public/assets/resume.pdf public/assets/resume`.
 
 ## Open ideas (not done)
-- Label the hop-03 pool as simulated, or let instances be failed by clicking.
-- Track record vs résumé mismatch: résumé lists Blogging Platform Backend + certifications.
-- Résumé contact line sits ~41pt right of centre after redaction; a LaTeX rebuild would centre it.
-- Diagram says "postgres" while the stack row says MySQL.
+- The page is client-rendered, so link previews (LinkedIn, WhatsApp, Slack) may be
+  blank. Prerendering would fix it.
+- Certifications, CODATHON and DATAQUEST rows have no date (`—`) — the résumé gives none.

@@ -105,11 +105,11 @@ export default function Flow() {
               role: 'button',
               tabIndex: 0,
               title: 'Evict the cached key',
-              'aria-label': 'Evict the cached key: the next request misses and reads from postgres'
+              'aria-label': 'Evict the cached key: the next request misses and reads from mysql'
             }}
           />
           <Edge label="on miss only" />
-          <Hop n="07" title="postgres" desc="source of truth · read replicas" ms="+12ms on miss" boxClass="is-dashed" />
+          <Hop n="07" title="mysql" desc="source of truth · read replicas" ms="+12ms on miss" boxClass="is-dashed" />
         </ol>
         <div className="return-rail" aria-hidden="true" ref={railRef}>
           <span className="packet-back" />
