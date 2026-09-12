@@ -4,7 +4,7 @@ const STACK = [
   ['Messaging', 'Apache Kafka'],
   ['Cache', 'Redis'],
   ['Store', 'MySQL'],
-  ['Cloud', 'AWS EC2 · Azure'],
+  ['Cloud', 'AWS · Azure'],
   ['AI', 'LangChain · FAISS · Gemini API']
 ];
 

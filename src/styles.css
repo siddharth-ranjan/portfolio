@@ -52,7 +52,6 @@ body{
   font-family:var(--body);font-weight:400;
   font-size:16px;line-height:1.6;
   -webkit-font-smoothing:antialiased;
-  transition:background .25s ease,color .25s ease;
 }
 a{color:inherit}
 h1,h2,h3{margin:0;font-family:var(--display);font-weight:700;
@@ -560,3 +559,6 @@ section[id]{scroll-margin-top:80px}
 .pool li[role="button"]:hover .node{color:var(--text)}
 .pool li[role="button"]:hover .bar{border-color:var(--accent)}
 .pool li[role="button"]:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* theme switch: every colour changes in the same frame (see useTheme) */
+.theme-switching,.theme-switching *,.theme-switching *::before,.theme-switching *::after{transition:none!important}
