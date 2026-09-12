@@ -80,10 +80,11 @@ export function buildCommands(evict) {
       ['dim', '  [resolved]   Nokia             R&D Intern, FN BBN CU-Hardening Aug 24 – May 25'],
       ['dim', '  [build]      vigil             incident intelligence           Sept 2026 →'],
       ['dim', '  [shipped]    multi-pdf-chat    LangChain + FAISS document QA   Feb 2024'],
-      ['dim', '  [shipped]    movie-reservation Spring Modulith, JWT, RBAC      2025'],
       ['dim', '  [shipped]    blogging-project  Spring Boot REST, JPA, MySQL    Jan – Feb 2024'],
       ['dim', '  [published]  IEEE              recommendation algorithms       2024'],
-      ['dim', '  [certified]  Anthropic · Azure Claude Certified Dev · AZ-900 · AI-901']
+      ['dim', '  [certified]  Anthropic · Azure Claude Certified Dev · AZ-900 · AI-901'],
+      ['dim', '  [won]        CODATHON          1st place, 36h — Hope Haven'],
+      ['dim', '  [won]        DATAQUEST         2nd runner-up, ML hackathon']
     ],
     contact: () => [
       ['ok', '  siddharthranjan0909@gmail.com'],

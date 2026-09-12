@@ -239,6 +239,7 @@ h2{font-size:clamp(30px,3.6vw,48px)}
 .badge-resolved{--c:var(--teal)}
 .badge-published{--c:var(--violet)}
 .badge-certified{--c:var(--gold)}
+.badge-won{--c:var(--rose)}
 .badge-active::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c);
   box-shadow:0 0 0 0 var(--c);animation:beat 1.8s ease-out infinite}
 @keyframes beat{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 60%,transparent)}
