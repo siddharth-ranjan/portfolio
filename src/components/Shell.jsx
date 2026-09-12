@@ -23,7 +23,7 @@ export default function Shell() {
   const historyRef = useRef([]);
   const hIndexRef = useRef(-1);
   const busyRef = useRef(false);
-  const touch = useMemo(() => matchMedia('(hover: none)').matches, []);
+  const touch = useMemo(() => typeof window !== 'undefined' && matchMedia('(hover: none)').matches, []);
   const COMMANDS = useMemo(() => buildCommands(() => bridge.current()), [bridge]);
 
   const sync = useCallback(() => {

@@ -1,18 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-const read = () => {
-  try {
-    const t = localStorage.getItem('theme');
-    if (t === 'light' || t === 'dark') return t;
-  } catch { /* private mode */ }
-  return document.documentElement.getAttribute('data-theme') || 'dark';
-};
-
+/**
+ * Starts as 'dark' so the prerendered HTML and the first client render agree;
+ * the stored choice is adopted right after mount. index.html sets the attribute
+ * from localStorage before paint, so a light-mode visitor never sees a flash.
+ */
 export function useTheme() {
-  const [theme, setTheme] = useState(read);
+  const [theme, setTheme] = useState('dark');
+
+  useEffect(() => {
+    let stored = null;
+    try { stored = localStorage.getItem('theme'); } catch { /* private mode */ }
+    if (stored === 'light' || stored === 'dark') setTheme(stored);
+  }, []);
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    try { localStorage.setItem('theme', theme); } catch { /* private mode */ }
   }, [theme]);
-  return [theme, setTheme];
+
+  // only a deliberate choice is persisted, never the pre-hydration default
+  const choose = useCallback((t) => {
+    setTheme(t);
+    try { localStorage.setItem('theme', t); } catch { /* private mode */ }
+  }, []);
+
+  return [theme, choose];
 }

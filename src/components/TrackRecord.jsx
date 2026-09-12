@@ -12,11 +12,11 @@ const ROWS = [
   { badge: 'published', label: 'published', name: 'IEEE', href: 'https://ieeexplore.ieee.org/document/10675697',
     desc: 'Performance assessment of recommendation algorithms — SVD, SVD++, k-NN on MovieLens', when: '2024' },
   { badge: 'certified', label: 'certified', name: 'certifications',
-    desc: 'Claude Certified Developer – Foundations (Anthropic) · Microsoft Azure AZ-900 · Azure AI-901', when: '—' },
+    desc: 'Claude Certified Developer – Foundations (Anthropic) · Microsoft Azure AZ-900 · Azure AI-901', when: 'Anthropic · Microsoft' },
   { badge: 'won', label: 'won', name: 'CODATHON',
-    desc: '1st place with a team of 5 in a 36-hour hackathon — Hope Haven, a marketplace connecting NGOs with donors', when: '—' },
+    desc: '1st place with a team of 5 in a 36-hour hackathon — Hope Haven, a marketplace connecting NGOs with donors', when: 'VIT Chennai' },
   { badge: 'won', label: 'won', name: 'DATAQUEST',
-    desc: '2nd runner-up in an 8-hour machine learning hackathon — Data Science Club, VIT Chennai', when: '—' }
+    desc: '2nd runner-up in an 8-hour machine learning hackathon — Data Science Club', when: 'VIT Chennai' }
 ];
 
 export default function TrackRecord() {
