@@ -12,7 +12,7 @@ const LANES = [
 const hPath = (y) => `M0 45 C12 45 12 ${y} 24 ${y} L86 ${y} C98 ${y} 98 45 110 45`;
 const vPath = (x) => `M120 0 C120 12 ${x} 12 ${x} 24 L${x} 86 C${x} 98 120 98 120 110`;
 
-function Hop({ n, title, desc, ms, boxClass, boxProps }) {
+function Hop({ n, title, desc, ms, boxClass, boxProps, hint }) {
   return (
     <li className="hop">
       <span className="hop-n">{n}</span>
@@ -20,6 +20,7 @@ function Hop({ n, title, desc, ms, boxClass, boxProps }) {
         <h3>{title}</h3>
         <p>{desc}</p>
         {ms && <span className="ms">{ms}</span>}
+        {hint}
       </div>
     </li>
   );
@@ -36,9 +37,13 @@ export default function Flow() {
   const [stats, setStats] = useState('Live · one GET every few seconds');
   const [label, setLabel] = useState({ text: '← 200 OK · 3.9ms · cache hit', miss: false });
 
+  // the "click to evict" tag stays until the visitor has found the feature
+  const [evictFound, setEvictFound] = useState(false);
+
   const onStats = useCallback((t) => setStats(t), []);
   const onLabel = useCallback((l) => setLabel(l), []);
-  const { running, setRunning, evictRef } = useFlow(flowRef, railRef, { onStats, onLabel });
+  const onEvict = useCallback(() => setEvictFound(true), []);
+  const { running, setRunning, evictRef } = useFlow(flowRef, railRef, { onStats, onLabel, onEvict });
 
   // let the shell's `evict` command reach this section
   useEffect(() => { bridge.current = () => evictRef.current(); }, [bridge, evictRef]);
@@ -52,8 +57,8 @@ export default function Flow() {
         <span className="tag">Solid = blocking · Dashed = async</span>
       </div>
       <p className="block-sub">
-        One GET, seven hops, under four milliseconds. Watch where it stops — then
-        evict the key and watch what happens when it doesn&apos;t.
+        One GET, seven hops, under four milliseconds. Watch where it stops. Then
+        click redis to evict its key and watch the next request fall through to mysql.
       </p>
 
       <div className="chain-scroll flow-scroll" id="flow-scroll" ref={flowRef}>
@@ -101,6 +106,7 @@ export default function Flow() {
           {/* redis is the one box you can act on: evicting its key forces the next request to miss */}
           <Hop
             n="06" title="redis" desc="most reads end right here" ms="3.5ms"
+            hint={evictFound ? null : <span className="evict-hint" aria-hidden="true" />}
             boxProps={{
               role: 'button',
               tabIndex: 0,

@@ -562,3 +562,21 @@ section[id]{scroll-margin-top:80px}
 
 /* theme switch: every colour changes in the same frame (see useTheme) */
 .theme-switching,.theme-switching *,.theme-switching *::before,.theme-switching *::after{transition:none!important}
+
+/* ── redis: say that it can be clicked ───────────────────────────── */
+#flow-scroll .box[role="button"]{position:relative}
+.evict-hint{position:absolute;top:-9px;right:8px;z-index:3;padding:1px 6px;pointer-events:none;
+  font-family:var(--mono);font-size:9.5px;line-height:1.45;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--amber);background:var(--bg);border:1px dashed color-mix(in srgb,var(--amber) 70%,transparent);
+  animation:hint-pulse 2.4s ease-in-out infinite}
+.evict-hint::after{content:"click to evict"}
+@media (hover:none){.evict-hint::after{content:"tap to evict"}}
+@keyframes hint-pulse{0%,100%{opacity:.6}50%{opacity:1}}
+/* desktop: sit in the empty hop-number row, right of "06", not on the box's top edge */
+@media (min-width:1101px){
+  .evict-hint{top:-25px;right:0;padding:0 5px;font-size:9px;line-height:15px;letter-spacing:.06em}
+}
+/* narrower desktop boxes leave no room for the full phrase beside "06" */
+@media (min-width:1101px) and (max-width:1360px){
+  .evict-hint::after{content:"evict"}
+}
