@@ -17,7 +17,7 @@ distributed system, with the diagrams animating live.
 
     npm install
     npm run dev        # http://localhost:5173
-    npm run build      # → dist/
+    npm run build      # → dist/ (client build + SSR build + prerender)
     npm run preview    # serve the built output
 
 ## Deploy
@@ -42,3 +42,7 @@ Push to `main`; Vercel builds with `npm run build` and serves `dist/`
   health checks and watch the pool drain, eject and scale out.
 - **Contact form** — validates in place and opens the visitor's mail app; there
   is no backend.
+- **Link previews** — Open Graph/Twitter tags live in `index.html` and the card is
+  `public/assets/og.png`; regenerate it with `python3 scripts/og-image.py`.
+- **Prerendering** — `npm run build` renders the app to HTML and the browser
+  hydrates it, so crawlers and no-JS visitors see the content.

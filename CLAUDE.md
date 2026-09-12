@@ -10,11 +10,15 @@ React + Vite app, no backend. Deployed on Vercel from `siddharth-ranjan/portfoli
     src/components/     one per section (Flow and Shell are the involved ones)
     src/hooks/          useTheme useReveal useFlow useScrollSpy
     src/shell/commands.js  command map, Damerau–Levenshtein suggestions
+    src/entry-server.jsx   SSR entry; scripts/prerender.js injects the HTML into dist
+    scripts/og-image.py    regenerates the link-preview card
     public/             favicon.svg + assets/ (resume.pdf, resume.png, icons) → served at /
 
 ## Run / deploy
     npm install && npm run dev     # dev
     npm run build && npm run preview
+`build` = client build, then an SSR build, then `scripts/prerender.js` writes the
+rendered markup into `dist/index.html`; the browser hydrates it.
 Push to `main` → Vercel production build. `vercel.json` pins framework vite,
 `npm run build`, output `dist`, and keeps the /resume and /image redirects.
 
@@ -34,6 +38,12 @@ Push to `main` → Vercel production build. `vercel.json` pins framework vite,
   motion* freezes it via `.motion-paused`. Scroll-reveal stays off under reduced motion.
 - The shell input is uncontrolled on purpose: its own cursor position is the
   truth and the prompt mirrors it.
+- The page is prerendered, so nothing browser-only may run during render:
+  `useTheme` starts at 'dark' and adopts localStorage in an effect, `Shell` guards
+  `matchMedia`, `Contact` fills its Idempotency-Key after mount. index.html sets
+  `data-theme` from localStorage before paint so light mode does not flash.
+- Link previews come from the static OG/Twitter tags in index.html plus
+  `public/assets/og.png`; crawlers never run the JS.
 
 ## What is real vs illustrative
 Real: track record, résumé, links, contact form (opens the visitor's mail app).
@@ -49,6 +59,5 @@ Overleaf, copy it over, then regenerate the phone fallback with
 `pdftoppm -r 150 -png -singlefile public/assets/resume.pdf public/assets/resume`.
 
 ## Open ideas (not done)
-- The page is client-rendered, so link previews (LinkedIn, WhatsApp, Slack) may be
-  blank. Prerendering would fix it.
-- Certifications, CODATHON and DATAQUEST rows have no date (`—`) — the résumé gives none.
+- Nothing outstanding. The track record's undated rows show the issuer or venue
+  ("Anthropic · Microsoft", "VIT Chennai") instead of a date, by choice.

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const TO = 'siddharthranjan0909@gmail.com';
 
@@ -43,10 +43,10 @@ export default function Contact() {
   const [payload, setPayload] = useState('');
   const [invalid, setInvalid] = useState({});
   const [status, setStatus] = useState({ cls: '', node: 'Opens your mail app with this filled in.' });
-  const idemKey = useMemo(
-    () => (window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)).slice(0, 8),
-    []
-  );
+  const [idemKey, setIdemKey] = useState('········');
+  useEffect(() => {
+    setIdemKey((window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)).slice(0, 8));
+  }, []);
 
   const clear = (name) => setInvalid((p) => (p[name] ? { ...p, [name]: false } : p));
 
