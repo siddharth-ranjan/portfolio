@@ -51,7 +51,8 @@ Real: track record, résumé, links, contact form (opens the visitor's mail app)
 Illustrative and labelled as such: the hop-03 pool ("Simulated pool"), latencies,
 cache hit/miss counter, lane picks, shell output. A scripted demo, not telemetry.
 The redis box is clickable (evicts the key so the next request misses); a pulsing
-"click to evict" tag on it advertises that until the visitor first uses it.
+"click to evict" tag on it advertises that; it hides while an eviction plays out
+(the forced miss) and returns on the next cache hit.
 The pool is interactive: clicking a healthy instance drains it, ejects it after two
 failed checks, then boots a replacement that warms up before taking traffic.
 
