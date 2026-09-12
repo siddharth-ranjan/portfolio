@@ -72,7 +72,7 @@ export function buildCommands(evict) {
       ['dim', '  messaging   Apache Kafka'],
       ['dim', '  cache       Redis'],
       ['dim', '  store       MySQL'],
-      ['dim', '  cloud       AWS EC2 · Microsoft Azure'],
+      ['dim', '  cloud       AWS · Microsoft Azure'],
       ['dim', '  ai          LangChain · FAISS · Gemini API · Vertex AI']
     ],
     projects: () => [
