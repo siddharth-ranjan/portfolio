@@ -1,4 +1,4 @@
-# Portfolio — siddharthranjan.me
+# Portfolio — siddharthranjan.app
 
 React + Vite. The page is one long scroll about how a request moves through a
 distributed system, with the diagrams animating live.
@@ -23,7 +23,7 @@ distributed system, with the diagrams animating live.
 ## Deploy
 
 Push to `main`; Vercel builds with `npm run build` and serves `dist/`
-(`vercel.json`). Domain: siddharthranjan.me.
+(`vercel.json`). Domain: siddharthranjan.app.
 
 ## Notes
 
