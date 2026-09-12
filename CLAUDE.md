@@ -1,7 +1,8 @@
-# Portfolio — siddharthranjan.me
+# Portfolio — siddharthranjan.app
 
 React + Vite app, no backend. Deployed on Vercel from `siddharth-ranjan/portfolio`
-(`main` = production). Custom domain: siddharthranjan.me (+ www).
+(`main` = production). Primary domain: siddharthranjan.app;
+siddharthranjan.me and both www hosts 308 to it (see README → Domains).
 
 ## Layout
     src/main.jsx        entry, imports styles.css
