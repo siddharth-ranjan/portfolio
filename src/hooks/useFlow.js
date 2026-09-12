@@ -11,13 +11,13 @@ const vertical = () => matchMedia('(max-width:1100px)').matches;
  * express. React owns only what is rendered as text: the counter, the response
  * label and the paused state.
  */
-export function useFlow(flowRef, railRef, { onStats, onLabel, onEvict }) {
+export function useFlow(flowRef, railRef, { onStats, onLabel, onEvict, onEvictCleared }) {
   const [running, setRunning] = useState(true);
   const evictRef = useRef(() => 'unavailable');
   const runningRef = useRef(true);
   const flushRef = useRef(null);
-  const cbs = useRef({ onStats, onLabel, onEvict });
-  cbs.current = { onStats, onLabel, onEvict };
+  const cbs = useRef({ onStats, onLabel, onEvict, onEvictCleared });
+  cbs.current = { onStats, onLabel, onEvict, onEvictCleared };
 
   useEffect(() => {
     const flow = flowRef.current;
@@ -33,7 +33,8 @@ export function useFlow(flowRef, railRef, { onStats, onLabel, onEvict }) {
     let onScreen = false;
     let waiters = [];
     let anims = [];
-    let n = 0, hits = 0, evicted = false;
+    // awaitingHit: the forced miss has been served; the next cache hit closes the demo
+    let n = 0, hits = 0, evicted = false, awaitingHit = false;
 
     const live = () => runningRef.current && onScreen && !document.hidden && !stopped;
     const flush = () => {
@@ -105,6 +106,7 @@ export function useFlow(flowRef, railRef, { onStats, onLabel, onEvict }) {
     const cycle = () => {
       n++;
       // a miss happens on schedule, or on the first request after someone evicts the key
+      const forced = evicted;
       const miss = evicted || n % 6 === 3;
       evicted = false;
       const last = miss ? DB : CACHE;
@@ -141,6 +143,11 @@ export function useFlow(flowRef, railRef, { onStats, onLabel, onEvict }) {
           if (stopped) return null;
           back.classList.remove('on');
           if (!miss) hits++;
+          if (forced) awaitingHit = true;
+          else if (!miss && awaitingHit) {
+            awaitingHit = false;
+            if (cbs.current.onEvictCleared) cbs.current.onEvictCleared();
+          }
           cbs.current.onStats(
             `Live · ${n} requests · ${hits} cache hits · ${Math.round((hits / n) * 100)}% never reached mysql${HINT}`
           );

@@ -37,13 +37,14 @@ export default function Flow() {
   const [stats, setStats] = useState('Live · one GET every few seconds');
   const [label, setLabel] = useState({ text: '← 200 OK · 3.9ms · cache hit', miss: false });
 
-  // the "click to evict" tag stays until the visitor has found the feature
-  const [evictFound, setEvictFound] = useState(false);
+  // the "click to evict" tag hides while an eviction plays out, and returns on the next cache hit
+  const [evictPending, setEvictPending] = useState(false);
 
   const onStats = useCallback((t) => setStats(t), []);
   const onLabel = useCallback((l) => setLabel(l), []);
-  const onEvict = useCallback(() => setEvictFound(true), []);
-  const { running, setRunning, evictRef } = useFlow(flowRef, railRef, { onStats, onLabel, onEvict });
+  const onEvict = useCallback(() => setEvictPending(true), []);
+  const onEvictCleared = useCallback(() => setEvictPending(false), []);
+  const { running, setRunning, evictRef } = useFlow(flowRef, railRef, { onStats, onLabel, onEvict, onEvictCleared });
 
   // let the shell's `evict` command reach this section
   useEffect(() => { bridge.current = () => evictRef.current(); }, [bridge, evictRef]);
@@ -106,7 +107,7 @@ export default function Flow() {
           {/* redis is the one box you can act on: evicting its key forces the next request to miss */}
           <Hop
             n="06" title="redis" desc="most reads end right here" ms="3.5ms"
-            hint={evictFound ? null : <span className="evict-hint" aria-hidden="true" />}
+            hint={evictPending ? null : <span className="evict-hint" aria-hidden="true" />}
             boxProps={{
               role: 'button',
               tabIndex: 0,
