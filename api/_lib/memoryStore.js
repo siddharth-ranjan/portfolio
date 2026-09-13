@@ -90,25 +90,37 @@ export function createMemoryStore() {
       return 'ok';
     },
 
-    async react({ id, ply, emoji, sid, ipHash, limit, windowSec }, now = Date.now()) {
+    async react({ id, ply, emoji, sid, ipHash, limit, windowSec, on = true }, now = Date.now()) {
       if (!(await store.rateLimit(`react:${ipHash}`, limit, windowSec, now))) return { verdict: 'limited' };
       const key = String(id);
       const g = games.get(key);
       if (current !== key || !g) return { verdict: 'nogame' };
       if (ply < 1 || ply > Number(g.ply)) return { verdict: 'noply' };
       const seen = reacted.get(key) || new Set();
+      reacted.set(key, seen);
+      const counts = reactions.get(key) || {};
+      reactions.set(key, counts);
       const mark = `${sid}:${ply}:${emoji}`;
-      let verdict = 'dup';
-      if (!seen.has(mark)) {
-        seen.add(mark);
-        reacted.set(key, seen);
-        const counts = reactions.get(key) || {};
-        const field = `${ply}:${emoji}`;
-        counts[field] = (counts[field] || 0) + 1;
-        reactions.set(key, counts);
+      const field = `${ply}:${emoji}`;
+      let verdict;
+      if (!on) {
+        verdict = 'absent';
+        if (seen.delete(mark)) {
+          counts[field] = (counts[field] || 0) - 1;
+          if (counts[field] <= 0) delete counts[field];
+          verdict = 'removed';
+        }
+      } else {
+        verdict = 'dup';
+        if (!seen.has(mark)) {
+          seen.add(mark);
+          counts[field] = (counts[field] || 0) + 1;
+          verdict = 'ok';
+        }
+      }
+      if (verdict === 'ok' || verdict === 'removed') {
         g.rseq = String(Number(g.rseq || 0) + 1);
         ver = `${key}:${g.ply}:${g.rseq}`;
-        verdict = 'ok';
       }
       return { verdict, rseq: Number(g.rseq || 0), reactions: reactionsOf(key) };
     },

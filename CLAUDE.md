@@ -82,6 +82,8 @@ two together.
   `chess:ver` (Lua commit, REACT script, new game) or they never see it.
 - Reactions: fixed emoji ids (`REACTIONS` in game.js, mirrored in ChessPage.jsx), counted
   once per visitor per move by the REACT Lua script (one round trip, rate limit inside).
+  Tapping your own reaction again takes it back (`on: false`, same script); a visitor can
+  only remove what they added.
   No free text anywhere, so nothing needs moderating.
 - Clicking a move previews that position (`previewFen` on Board); the board is read-only
   while previewing and orientation stays with the live position. ← → step through.

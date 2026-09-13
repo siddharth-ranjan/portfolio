@@ -21,10 +21,14 @@ const ahead = (a, b) => {
 // A cached copy of the state can be a little old: never step back to it.
 const newer = (prev, next) => !prev || !ahead(tuple(prev), tuple(next));
 
-const bump = (reactions, ply, emoji) => {
+const bump = (reactions, ply, emoji, by) => {
   const forPly = { ...(reactions?.[ply] || {}) };
-  forPly[emoji] = (forPly[emoji] || 0) + 1;
-  return { ...reactions, [ply]: forPly };
+  const n = (forPly[emoji] || 0) + by;
+  if (n > 0) forPly[emoji] = n;
+  else delete forPly[emoji];
+  const out = { ...reactions, [ply]: forPly };
+  if (!Object.keys(forPly).length) delete out[ply];
+  return out;
 };
 
 const errorText = (status, body, fallback) =>
@@ -42,6 +46,7 @@ export function useCrowdGame() {
   const [asleep, setAsleep] = useState(false); // polling stopped until the visitor is back
   const knownGame = useRef(null);
   const current = useRef(null); // the state on screen, for the poll loop
+  const reacting = useRef(new Set()); // "ply:emoji" taps still in flight
 
   const show = useCallback((next) => {
     current.current = next;
@@ -206,31 +211,39 @@ export function useCrowdGame() {
     }
   }, [state, pending, fetchState, show]);
 
-  // Shown straight away; the server's counts replace the guess when it answers.
+  // Tap to react, tap your own again to take it back. Shown straight away; the server's
+  // counts replace the guess when it answers, and a refusal rolls it back.
   const react = useCallback(async (ply, emoji) => {
     const shown = current.current;
     const mark = `${ply}:${emoji}`;
-    if (!shown || myReactions.has(mark)) return;
+    if (!shown || reacting.current.has(mark)) return; // a second tap before the first lands
+    reacting.current.add(mark);
     lastActivity.current = Date.now();
     const id = shown.gameId;
+    const on = !myReactions.has(mark);
     const before = myReactions;
-    saveReactions(id, new Set(before).add(mark));
-    show({ ...shown, reactions: bump(shown.reactions, ply, emoji) });
+    const after = new Set(before);
+    if (on) after.add(mark);
+    else after.delete(mark);
+    saveReactions(id, after);
+    show({ ...shown, reactions: bump(shown.reactions, ply, emoji, on ? 1 : -1) });
     let failure = "Couldn't send that reaction.";
     try {
       const r = await fetch('/api/chess/react', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ gameId: id, ply, emoji })
+        body: JSON.stringify({ gameId: id, ply, emoji, on })
       });
       const body = await r.json().catch(() => ({}));
       if (r.ok && body.ok) {
         const now = current.current;
         if (now && now.gameId === id && body.rseq >= (now.rseq || 0)) show({ ...now, reactions: body.reactions, rseq: body.rseq });
+        reacting.current.delete(mark);
         return;
       }
       failure = errorText(r.status, body, failure);
     } catch { /* offline: fall through */ }
+    reacting.current.delete(mark);
     saveReactions(id, before);
     setNotice({ tone: 'err', text: failure });
     await fetchState(`t=${Date.now()}`);

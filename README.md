@@ -89,7 +89,8 @@ new one starts 60 seconds later.
   untouched for 10 minutes stops asking ("paused") until someone moves the mouse or taps. `api/chess/move` validates with chess.js, then commits through one Lua
   script that atomically checks nobody moved first and this visitor didn't make the
   previous move (the game hash keeps `lastSid`). Key layout is documented at the top of `api/_lib/redisStore.js`.
-- Anyone can react to any move with one of five emoji (once per emoji per move), and
+- Anyone can react to any move with one of five emoji (once per emoji per move; tap your
+  own again to take it back), and
   click a move in the list to see the board at that point (← → step through).
 - A visitor is an anonymous `chess_sid` cookie (HttpOnly). Raw IPs are never stored —
   only a salted hash, for the limit of 20 move attempts a minute per network. Clearing
