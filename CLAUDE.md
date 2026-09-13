@@ -12,7 +12,8 @@ siddharthranjan.me and both www hosts 308 to it (see README → Domains).
     src/hooks/          useTheme useReveal useFlow useScrollSpy
     src/shell/commands.js  command map, Damerau–Levenshtein suggestions
     src/entry-server.jsx   SSR entry; scripts/prerender.js injects the HTML into dist
-    scripts/og-image.py    regenerates the link-preview card
+    scripts/og-image.py    regenerates the link-preview card (og.png)
+    scripts/og-chess.py    regenerates the /chess card (og-chess.png)
     public/             favicon.svg + assets/ (resume.pdf, resume.png, icons) → served at /
     chess.html          second Vite page → /chess (vercel.json rewrite); static shell prerendered
     src/chess/          ChessPage, Board (react-chessboard v5), useCrowdGame (polling + moves)
@@ -59,7 +60,9 @@ two together.
   `matchMedia`, `Contact` fills its Idempotency-Key after mount. index.html sets
   `data-theme` from localStorage before paint so light mode does not flash.
 - Link previews come from the static OG/Twitter tags in index.html plus
-  `public/assets/og.png`; crawlers never run the JS.
+  `public/assets/og.png` (chess.html uses `og-chess.png`); crawlers never run the JS.
+  WhatsApp shows a centre crop of wide cards (about x 110–1090 of 1200), so keep what
+  matters inside that.
 - Crowd chess: the server is the authority. Every move is re-validated with chess.js
   and committed by the Lua script in `redisStore.js` (same game, same ply, visitor isn't
   the game's `lastSid` — nobody moves twice in a row) — keep checks there, not only in
