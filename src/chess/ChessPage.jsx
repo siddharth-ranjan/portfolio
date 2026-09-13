@@ -44,7 +44,7 @@ function pairs(history) {
 
 export default function ChessPage() {
   const [theme, setTheme] = useTheme();
-  const { state, error, notice, moved, pending, canMove, submitMove } = useCrowdGame();
+  const { state, error, notice, waiting, pending, canMove, submitMove } = useCrowdGame();
   const now = useClock(Boolean(state?.nextGameAt));
   const side = state?.turn === 'w' ? 'White' : 'Black';
   const history = state?.history || [];
@@ -52,9 +52,9 @@ export default function ChessPage() {
 
   let you = null;
   if (state && !error && state.status === 'active') {
-    if (moved) you = "You've made your move in this game. Watch it play out.";
+    if (waiting) you = 'You made the last move. Once someone else replies, you can move again.';
     else if (pending) you = 'Sending your move…';
-    else you = `Your turn: play one move for ${side}.`;
+    else you = `Your turn: play a move for ${side}.`;
   }
 
   return (
@@ -65,11 +65,11 @@ export default function ChessPage() {
         <section id="chess" className="wrap block chess-page">
           <div className="block-head">
             <h1 className="chess-title">Crowd chess</h1>
-            <span className="tag">One shared game · one move per visitor</span>
+            <span className="tag">One shared game · no two moves in a row</span>
           </div>
           <p className="block-sub">
-            Everyone who visits plays the same game, and each visitor gets exactly one move in it.
-            Make yours for whichever side is to move, then come back and watch the game unfold.
+            Everyone who visits plays the same game. Make a move for whichever side is to play —
+            then someone else has to reply before you can move again.
           </p>
 
           <div className="chess-grid">
@@ -87,7 +87,7 @@ export default function ChessPage() {
                 />
               </div>
               <p className="chess-status" role="status" aria-live="polite">{statusLine(state, error, now)}</p>
-              {you && <p className={`chess-you${moved ? ' is-done' : ''}`}>{you}</p>}
+              {you && <p className={`chess-you${waiting ? ' is-done' : ''}`}>{you}</p>}
               {notice && <p className={`chess-notice ${notice.tone}`}>{notice.text}</p>}
             </div>
 

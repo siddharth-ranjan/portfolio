@@ -74,8 +74,9 @@ copies already sent, LinkedIn posts) have aged out.
 
 ## Crowd chess (`/chess`)
 
-One shared game of chess for every visitor. Each visitor gets **one move per game**;
-when a game ends, a new one starts 60 seconds later.
+One shared game of chess for every visitor. Anyone can move for the side to play, but
+**nobody moves twice in a row** — someone else has to reply first. When a game ends, a
+new one starts 60 seconds later.
 
 **How it works**
 - `chess.html` is a second Vite page (not prerendered, since it is live data);
@@ -83,10 +84,11 @@ when a game ends, a new one starts 60 seconds later.
 - State lives in **Upstash Redis**. `api/chess/state` returns the shared game and is
   CDN-cached for 1s, so polling costs at most one database read a second however many
   people watch. `api/chess/move` validates with chess.js, then commits through one Lua
-  script that atomically checks nobody moved first, this visitor hasn't moved, and their
-  network is under its cap. Key layout is documented at the top of `api/_lib/redisStore.js`.
+  script that atomically checks nobody moved first and this visitor didn't make the
+  previous move (the game hash keeps `lastSid`). Key layout is documented at the top of `api/_lib/redisStore.js`.
 - A visitor is an anonymous `chess_sid` cookie (HttpOnly). Raw IPs are never stored —
-  only a salted hash, to allow at most 3 moves per network per game and 20 attempts a minute.
+  only a salted hash, for the limit of 20 move attempts a minute per network. Clearing
+  cookies gets a fresh visitor id; for a portfolio game that's an accepted gap.
 
 **Setup (once)** — Vercel → project → Storage → Create → *Upstash for Redis* (free) →
 connect it to this project with **Production** and **Preview** ticked, then redeploy.

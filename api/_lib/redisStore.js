@@ -1,9 +1,8 @@
 // Upstash Redis store. Keys:
 //   chess:current            id of the game being played
 //   chess:seq                game id sequence
-//   chess:game:{id}          hash: fen pgn ply status result startedAt lastMoveAt endedAt lastMove
-//   chess:game:{id}:movers   set of visitor ids who have moved in that game
-//   chess:game:{id}:ips      hash: ip hash -> moves made in that game
+//   chess:game:{id}          hash: fen pgn ply status result startedAt lastMoveAt endedAt lastMove lastSid
+//   chess:game:{id}:movers   set of visitor ids who have moved in that game (for the count)
 //   chess:stats              hash: games whiteWins blackWins draws
 //   chess:rollover:{id}      lock so only one request starts the next game
 //   chess:rl:{ipHash}        per-minute move-attempt counter
@@ -13,35 +12,31 @@ const K = {
   stats: 'chess:stats',
   game: (id) => `chess:game:${id}`,
   movers: (id) => `chess:game:${id}:movers`,
-  ips: (id) => `chess:game:${id}:ips`,
   lock: (id) => `chess:rollover:${id || 0}`,
   rl: (hash) => `chess:rl:${hash}`
 };
 
 const MONTH = 60 * 60 * 24 * 30;
 
-// One round trip that checks and writes atomically: nobody else moved first,
-// this visitor hasn't moved, their network isn't over its cap.
+// One round trip that checks and writes atomically: nobody else moved first and
+// this visitor didn't make the previous move.
 const COMMIT = `
 local status = redis.call('HGET', KEYS[1], 'status')
 if not status then return 'nogame' end
 if status ~= 'active' then return 'over' end
 if tonumber(redis.call('HGET', KEYS[1], 'ply')) ~= tonumber(ARGV[1]) then return 'stale' end
-if redis.call('SISMEMBER', KEYS[2], ARGV[2]) == 1 then return 'moved' end
-if tonumber(redis.call('HGET', KEYS[3], ARGV[3]) or '0') >= tonumber(ARGV[4]) then return 'ipcap' end
+if redis.call('HGET', KEYS[1], 'lastSid') == ARGV[2] then return 'consecutive' end
 redis.call('HSET', KEYS[1],
-  'fen', ARGV[5], 'pgn', ARGV[6], 'ply', tonumber(ARGV[1]) + 1, 'lastMoveAt', ARGV[7],
-  'status', ARGV[8], 'result', ARGV[9], 'endedAt', ARGV[10], 'lastMove', ARGV[11])
+  'fen', ARGV[3], 'pgn', ARGV[4], 'ply', tonumber(ARGV[1]) + 1, 'lastMoveAt', ARGV[5],
+  'status', ARGV[6], 'result', ARGV[7], 'endedAt', ARGV[8], 'lastMove', ARGV[9], 'lastSid', ARGV[2])
 redis.call('SADD', KEYS[2], ARGV[2])
-redis.call('HINCRBY', KEYS[3], ARGV[3], 1)
-if ARGV[8] ~= 'active' then
-  redis.call('HINCRBY', KEYS[4], 'games', 1)
-  if ARGV[9] == '1-0' then redis.call('HINCRBY', KEYS[4], 'whiteWins', 1)
-  elseif ARGV[9] == '0-1' then redis.call('HINCRBY', KEYS[4], 'blackWins', 1)
-  else redis.call('HINCRBY', KEYS[4], 'draws', 1) end
+if ARGV[6] ~= 'active' then
+  redis.call('HINCRBY', KEYS[3], 'games', 1)
+  if ARGV[7] == '1-0' then redis.call('HINCRBY', KEYS[3], 'whiteWins', 1)
+  elseif ARGV[7] == '0-1' then redis.call('HINCRBY', KEYS[3], 'blackWins', 1)
+  else redis.call('HINCRBY', KEYS[3], 'draws', 1) end
   redis.call('EXPIRE', KEYS[1], ${MONTH * 3})
   redis.call('EXPIRE', KEYS[2], ${MONTH})
-  redis.call('EXPIRE', KEYS[3], ${MONTH})
 end
 return 'ok'
 `;
@@ -67,7 +62,7 @@ export function createRedisStore(redis) {
     const id = String(await redis.incr(K.seq));
     await redis.hset(K.game(id), {
       fen, pgn: '', ply: 0, status: 'active', result: '',
-      startedAt: now, lastMoveAt: '', endedAt: '', lastMove: ''
+      startedAt: now, lastMoveAt: '', endedAt: '', lastMove: '', lastSid: ''
     });
     await redis.set(K.current, id);
     return id;
@@ -83,7 +78,7 @@ export function createRedisStore(redis) {
       return Object.keys(g).length ? g : null;
     },
     async moverCount(id) { return Number(await redis.scard(K.movers(id))) || 0; },
-    async hasMoved(id, sid) { return Number(await redis.sismember(K.movers(id), sid)) === 1; },
+    async isLastMover(id, sid) { return Boolean(sid) && String(await redis.hget(K.game(id), 'lastSid')) === sid; },
     async getStats() { return statsFrom(toObject(await redis.hgetall(K.stats))); },
 
     // Round trips matter: each is a request from the function to Upstash. The client
@@ -106,15 +101,16 @@ export function createRedisStore(redis) {
       ]);
       const allowed = Number(attempts) <= limit;
       const id = rawId == null ? null : String(rawId);
-      if (!allowed || !id) return { allowed, id, game: null, movers: 0, stats: statsFrom({}), moved: false };
-      // batch 2: the game, whether this visitor already moved, and the counters
-      const [g, moved, count, st] = await Promise.all([
+      if (!allowed || !id) return { allowed, id, game: null, movers: 0, stats: statsFrom({}), lastMover: false, playedBefore: false };
+      // batch 2: the game (its lastSid says who moved last), whether this visitor has played before, and the counters
+      const [g, played, count, st] = await Promise.all([
         redis.hgetall(K.game(id)), redis.sismember(K.movers(id), sid), redis.scard(K.movers(id)), redis.hgetall(K.stats)
       ]);
       const game = toObject(g);
       return {
         allowed, id, game: Object.keys(game).length ? game : null,
-        moved: Number(moved) === 1, movers: Number(count) || 0, stats: statsFrom(toObject(st))
+        lastMover: game.lastSid === sid, playedBefore: Number(played) === 1,
+        movers: Number(count) || 0, stats: statsFrom(toObject(st))
       };
     },
     async startGame(prevId, now, fen) {
@@ -126,8 +122,8 @@ export function createRedisStore(redis) {
     async commit(id, m) {
       const out = await redis.eval(
         COMMIT,
-        [K.game(id), K.movers(id), K.ips(id), K.stats],
-        [String(m.ply), m.sid, m.ipHash, String(m.ipCap), m.fen, m.pgn, String(m.lastMoveAt),
+        [K.game(id), K.movers(id), K.stats],
+        [String(m.ply), m.sid, m.fen, m.pgn, String(m.lastMoveAt),
           m.status, m.result, String(m.endedAt), m.lastMove]
       );
       return String(out);

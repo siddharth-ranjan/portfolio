@@ -1,7 +1,6 @@
 import { Chess } from 'chess.js';
 
 export const START_FEN = new Chess().fen();
-export const IP_CAP = 3;                              // moves per network per game (shared offices, campuses)
 export const ROLLOVER_MS = 60_000;                    // a finished game stays on screen this long
 export const RATE_LIMIT = { limit: 20, windowSec: 60 }; // move attempts per network
 
@@ -70,8 +69,7 @@ const REJECTED = {
   stale: [409, 'stale', 'Someone moved first. Board refreshed.'],
   over: [409, 'game-over', 'This game has ended. A new one starts shortly.'],
   nogame: [409, 'new-game', 'A new game has started. Board refreshed.'],
-  moved: [403, 'already-moved', "You've already moved in this game. One move per visitor — watch it play out."],
-  ipcap: [403, 'network-limit', 'Your network has used its moves for this game. Catch the next one.']
+  consecutive: [403, 'consecutive', 'You made the last move. Someone else has to reply before you move again.']
 };
 
 export async function applyMove(store, input, now = Date.now()) {
@@ -85,7 +83,7 @@ export async function applyMove(store, input, now = Date.now()) {
   if (!ctx.id || !ctx.game || String(ctx.id) !== String(input.gameId)) return reply(...REJECTED.nogame);
   if (ctx.game.status !== 'active') return reply(...REJECTED.over);
   if (Number(ctx.game.ply) !== Number(input.ply)) return reply(...REJECTED.stale);
-  if (ctx.moved) return reply(...REJECTED.moved);
+  if (ctx.lastMover) return reply(...REJECTED.consecutive);
 
   const chess = loadGame(ctx.game);
   const candidates = chess.moves({ square: from, verbose: true }).filter((m) => m.to === to);
@@ -99,9 +97,9 @@ export async function applyMove(store, input, now = Date.now()) {
   const lastMove = JSON.stringify({ from: move.from, to: move.to, san: move.san });
   const endedAt = status === 'active' ? '' : now;
 
-  // the store re-checks ply, visitor and network atomically before writing
+  // the store re-checks game, ply and last mover atomically before writing
   const verdict = await store.commit(ctx.id, {
-    ply, sid: input.sid, ipHash: input.ipHash, ipCap: IP_CAP,
+    ply, sid: input.sid,
     fen: chess.fen(), pgn: chess.pgn(), lastMoveAt: now, status, result, endedAt, lastMove
   });
   if (verdict !== 'ok') return reply(...(REJECTED[verdict] || [500, 'error', 'Something went wrong.']));
@@ -110,7 +108,7 @@ export async function applyMove(store, input, now = Date.now()) {
   // it instead of reading everything back (saves a round trip on every move).
   const game = {
     ...ctx.game, fen: chess.fen(), pgn: chess.pgn(), ply: String(ply + 1),
-    lastMoveAt: String(now), status, result, endedAt: String(endedAt), lastMove
+    lastMoveAt: String(now), status, result, endedAt: String(endedAt), lastMove, lastSid: input.sid
   };
   const stat = STAT_FOR[result] || 'draws';
   const stats = status === 'active'
@@ -122,7 +120,7 @@ export async function applyMove(store, input, now = Date.now()) {
     body: {
       ok: true,
       move: { from: move.from, to: move.to, san: move.san },
-      state: buildState(ctx.id, game, ctx.movers + 1, stats, chess)
+      state: buildState(ctx.id, game, ctx.movers + (ctx.playedBefore ? 0 : 1), stats, chess)
     }
   };
 }

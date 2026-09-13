@@ -14,7 +14,7 @@ export function buildCommands(evict) {
       ['', '  stack      the tools in play'],
       ['', '  projects   track record'],
       ['', '  contact    how to reach me'],
-      ['', '  chess      one shared game, one move per visitor'],
+      ['', '  chess      one shared game, no two moves in a row'],
       ['', '  clear      wipe the screen']
     ],
     whoami: () => [
@@ -109,7 +109,7 @@ export function buildCommands(evict) {
       ];
     },
     chess: () => [
-      ['', 'crowd chess — one shared game, one move per visitor.'],
+      ['', 'crowd chess — one shared game, no two moves in a row.'],
       ['ok', '  siddharthranjan.app/chess'],
       ['dim', '  make your move, then watch the game play out']
     ],

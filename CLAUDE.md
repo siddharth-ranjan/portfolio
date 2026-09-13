@@ -55,9 +55,9 @@ two together.
 - Link previews come from the static OG/Twitter tags in index.html plus
   `public/assets/og.png`; crawlers never run the JS.
 - Crowd chess: the server is the authority. Every move is re-validated with chess.js
-  and committed by the Lua script in `redisStore.js` (same game, same ply, visitor not
-  in movers, network under IP_CAP) — keep checks there, not only in JS. The memory store
-  must keep the same contract: `npm test` runs against it.
+  and committed by the Lua script in `redisStore.js` (same game, same ply, visitor isn't
+  the game's `lastSid` — nobody moves twice in a row) — keep checks there, not only in
+  JS. The memory store must keep the same contract: `npm test` runs against it.
 - `vite.config.js` builds two pages and skips `rollupOptions.input` for the SSR build
   (`isSsrBuild`), otherwise the prerender breaks. In dev, a middleware serves
   `/api/chess/*` via `ssrLoadModule` over the in-memory store.

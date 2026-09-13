@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createMemoryStore } from '../api/_lib/memoryStore.js';
-import { getState, applyMove, ROLLOVER_MS, IP_CAP } from '../api/_lib/game.js';
+import { getState, applyMove, ROLLOVER_MS } from '../api/_lib/game.js';
 
 const T0 = 1_700_000_000_000;
 const visitor = (n) => ({ sid: String(n).padStart(32, '0'), ipHash: `ip-${n}` });
@@ -38,14 +38,25 @@ test('illegal moves and off-board squares are rejected without changing the game
   assert.equal((await getState(store, T0)).ply, 0);
 });
 
-test('one move per visitor per game', async () => {
+test('a visitor cannot make two moves in a row', async () => {
+  const store = createMemoryStore();
+  let s = await getState(store, T0);
+  s = (await play(store, s, visitor(1), 'e2', 'e4')).body.state;
+  const again = await play(store, s, visitor(1), 'e7', 'e5');
+  assert.equal(again.status, 403);
+  assert.equal(again.body.error, 'consecutive');
+  assert.equal((await getState(store, T0)).ply, 1);
+});
+
+test('once someone else replies, the same visitor can move again', async () => {
   const store = createMemoryStore();
   let s = await getState(store, T0);
   s = (await play(store, s, visitor(1), 'e2', 'e4')).body.state;
   s = (await play(store, s, visitor(2), 'e7', 'e5')).body.state;
-  const again = await play(store, s, visitor(1), 'g1', 'f3');
-  assert.equal(again.status, 403);
-  assert.equal(again.body.error, 'already-moved');
+  const r = await play(store, s, visitor(1), 'g1', 'f3');
+  assert.equal(r.status, 200);
+  assert.equal(r.body.state.movers, 2, 'a returning visitor is not counted twice');
+  assert.deepEqual(r.body.state, await getState(store, T0));
 });
 
 test('a move made from an old position loses to the one that landed first', async () => {
@@ -57,19 +68,14 @@ test('a move made from an old position loses to the one that landed first', asyn
   assert.equal(late.body.error, 'stale');
 });
 
-test(`at most ${IP_CAP} moves per network per game`, async () => {
+test('people on the same network can play each other', async () => {
   const store = createMemoryStore();
   let s = await getState(store, T0);
   const moves = [['e2', 'e4'], ['e7', 'e5'], ['g1', 'f3'], ['b8', 'c6']];
   for (let i = 0; i < moves.length; i++) {
-    const r = await play(store, s, { sid: `n${i}`.padStart(32, '0'), ipHash: 'shared-office' }, ...moves[i]);
-    if (i < IP_CAP) {
-      assert.equal(r.status, 200);
-      s = r.body.state;
-    } else {
-      assert.equal(r.status, 403);
-      assert.equal(r.body.error, 'network-limit');
-    }
+    const r = await play(store, s, { sid: `n${i % 2}`.padStart(32, '0'), ipHash: 'shared-office' }, ...moves[i]);
+    assert.equal(r.status, 200);
+    s = r.body.state;
   }
 });
 
