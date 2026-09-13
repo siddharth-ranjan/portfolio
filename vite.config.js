@@ -13,10 +13,10 @@ function chessApiInDev() {
         process.env.CHESS_MEMORY_STORE = '1';
       }
       server.middlewares.use(async (req, res, next) => {
-        const route = /^\/api\/chess\/(state|version|move|react|me|reset)(?:\?.*)?$/.exec(req.url || '');
+        const route = /^\/api\/(chess\/(?:state|version|move|react|me|reset)|music\/recent)(?:\?.*)?$/.exec(req.url || '');
         if (!route) return next();
         try {
-          const mod = await server.ssrLoadModule(`/api/chess/${route[1]}.js`);
+          const mod = await server.ssrLoadModule(`/api/${route[1]}.js`);
           await mod.default(req, res);
         } catch (err) {
           next(err);

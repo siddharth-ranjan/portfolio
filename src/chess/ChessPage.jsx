@@ -4,6 +4,7 @@ import TopBar from '../components/TopBar.jsx';
 import Footer from '../components/Footer.jsx';
 import { useTheme } from '../hooks/useTheme.js';
 import Board from './Board.jsx';
+import NowPlaying from './NowPlaying.jsx';
 import { useCrowdGame } from './useCrowdGame.js';
 
 const ENDING = {
@@ -199,6 +200,7 @@ export default function ChessPage() {
               {notice && <p className={`chess-notice ${notice.tone}`}>{notice.text}</p>}
             </div>
 
+            <div className="chess-side-col">
             <aside className="panel chess-side" aria-label="Game details">
               <div className="panel-head">
                 <span className="tag">Moves</span>
@@ -221,6 +223,8 @@ export default function ChessPage() {
                 <div><dt>Draws</dt><dd>{state?.stats.draws ?? '—'}</dd></div>
               </dl>
             </aside>
+            <NowPlaying />
+            </div>
           </div>
         </section>
       </main>

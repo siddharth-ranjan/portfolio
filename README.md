@@ -107,6 +107,20 @@ Without the variable the endpoint doesn't exist (404).
 **Locally** — `npm run dev` serves the API from the same handlers over an in-memory
 store (no Redis needed); open http://localhost:5173/chess.html.
 
+## Music card (on `/chess`)
+
+Shows what's playing and the last five songs, from Last.fm. The scrobbles come from
+YouTube Music: *Web Scrobbler* in Brave on the laptop (site access limited to
+music.youtube.com) and *Pano Scrobbler* on Android (only YouTube Music selected, battery
+unrestricted).
+
+- `api/music/recent` calls Last.fm's `user.getrecenttracks`; parsing lives in
+  `api/_lib/lastfm.js`. The CDN keeps the answer 30s, so visitors never call Last.fm.
+- Set `LASTFM_API_KEY` (from last.fm/api/account/create) and `LASTFM_USER` in Vercel for
+  Production and Preview. Without them the endpoint answers 503 and the card stays hidden;
+  it also hides if Last.fm is down or "Hide recent listening" is on in Last.fm's privacy settings.
+- To change the account, change `LASTFM_USER` and redeploy.
+
 ## Notes
 
 - **Theme** — switch in the top bar; the choice is saved in `localStorage`.
