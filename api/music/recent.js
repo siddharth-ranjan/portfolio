@@ -5,8 +5,9 @@ import { send } from '../_lib/http.js';
 // visitors never reach Last.fm directly; an older copy is fine for a music card.
 export default async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, { ok: false, error: 'method' }, { Allow: 'GET, HEAD' });
-  const apiKey = process.env.LASTFM_API_KEY;
-  const user = process.env.LASTFM_USER;
+  // trimmed: a value pasted into Vercel with a stray space or newline is a different user
+  const apiKey = (process.env.LASTFM_API_KEY || '').trim();
+  const user = (process.env.LASTFM_USER || '').trim();
   if (!apiKey || !user) {
     return send(res, 503, { ok: false, error: 'not-configured' }, { 'Cache-Control': 'public, max-age=0, s-maxage=60' });
   }
