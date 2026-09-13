@@ -79,8 +79,9 @@ One shared game of chess for every visitor. Anyone can move for the side to play
 new one starts 60 seconds later.
 
 **How it works**
-- `chess.html` is a second Vite page (not prerendered, since it is live data);
-  Vercel rewrites `/chess` to it.
+- `chess.html` is a second Vite page; Vercel rewrites `/chess` to it. The build prerenders
+  its static shell (top bar, heading, copy, a starting-position board, empty panels) so the
+  first paint isn't blank and crawlers see text; the live game fills in after hydration.
 - State lives in **Upstash Redis**. Watching browsers poll `api/chess/version` every
   second — a single Redis GET of `chess:ver` ("{game}:{ply}"), which the CDN shares
   between everyone polling in the same second — and fetch the full `api/chess/state`

@@ -42,6 +42,40 @@ function Dock({ side, taken }) {
  * The shared board. The server is the authority: a move is shown immediately
  * (optimistically) and rolled back if the server turns it down.
  */
+// White and black pieces as filled glyphs, told apart by colour (see .chess-static)
+const STATIC_GLYPH = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
+
+// A plain board drawn from a FEN, used where react-chessboard can't run: in the prerendered
+// page and on the browser's first render, so hydration matches the server's markup.
+function StaticBoard({ fen, orientation }) {
+  const cells = [];
+  fen.split(' ')[0].split('/').forEach((row, r) => {
+    let c = 0;
+    for (const ch of row) {
+      if (/\d/.test(ch)) {
+        for (let i = 0; i < Number(ch); i++, c++) cells.push({ r, c, piece: null });
+      } else {
+        cells.push({ r, c, piece: ch });
+        c++;
+      }
+    }
+  });
+  if (orientation === 'black') cells.reverse();
+  return (
+    <div className="chess-static" role="img" aria-label="Chess board">
+      {cells.map(({ r, c, piece }) => (
+        <span key={`${r}${c}`} className={`chess-static-sq${(r + c) % 2 ? ' is-dark' : ''}`}>
+          {piece && (
+            <span className={piece === piece.toUpperCase() ? 'is-white' : 'is-black'} aria-hidden="true">
+              {STATIC_GLYPH[piece.toLowerCase()]}
+            </span>
+          )}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function Board({ fen, previewFen, lastMove, history, canMove, onMove }) {
   const serverFen = fen || START;
   const [optimistic, setOptimistic] = useState(null);
@@ -49,6 +83,9 @@ export default function Board({ fen, previewFen, lastMove, history, canMove, onM
   const [promotion, setPromotion] = useState(null); // { from, to } waiting for a piece choice
   const [typed, setTyped] = useState('');
   const [typedError, setTypedError] = useState('');
+  // react-chessboard is browser-only: until mounted, show the static board in its place
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // a new position from the server replaces anything local
   useEffect(() => {
@@ -189,7 +226,7 @@ export default function Board({ fen, previewFen, lastMove, history, canMove, onM
   return (
     <div className="chess-board">
       <Dock side={bottom === 'w' ? 'b' : 'w'} taken={taken} />
-      <Chessboard options={options} />
+      {mounted ? <Chessboard options={options} /> : <StaticBoard fen={position} orientation={orientation} />}
       <Dock side={bottom} taken={taken} />
       {promotion && (
         <div className="chess-promo" role="dialog" aria-label="Choose a piece to promote to">
