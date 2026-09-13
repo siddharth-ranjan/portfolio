@@ -116,6 +116,12 @@ unrestricted).
 
 - `api/music/recent` calls Last.fm's `user.getrecenttracks`; parsing lives in
   `api/_lib/lastfm.js`. The CDN keeps the answer 30s, so visitors never call Last.fm.
+- Last.fm often has no cover for YouTube Music songs (compilation albums without artwork,
+  or music videos whose title the scrobbler split into the wrong fields). For those,
+  `api/_lib/artwork.js` looks the song up on the iTunes Search API (no key; India's store,
+  then the US), accepting a result only when the title and the artist or soundtrack agree,
+  in either field order. Answers are cached in Redis: found covers 30 days, misses 7. When
+  Last.fm's names were garbled, the card shows the catalogue's title and artist instead.
 - Set `LASTFM_API_KEY` (from last.fm/api/account/create) and `LASTFM_USER` in Vercel for
   Production and Preview. Without them the endpoint answers 503 and the card stays hidden;
   it also hides if Last.fm is down or "Hide recent listening" is on in Last.fm's privacy settings.

@@ -19,7 +19,8 @@ siddharthranjan.me and both www hosts 308 to it (see README → Domains).
     api/chess/          Vercel functions: state (GET), version (GET, polled), move, react, me, reset
     api/_lib/           game.js (chess.js rules), redisStore.js (Upstash + Lua commit),
                         memoryStore.js (tests/dev), store.js (picks one), session.js, http.js,
-                        lastfm.js (Last.fm recent-tracks parsing)
+                        lastfm.js (Last.fm recent-tracks parsing),
+                        artwork.js (iTunes cover fallback, cached in Redis)
     api/music/recent.js music card on /chess: now playing + last 5 (src/chess/NowPlaying.jsx)
     tests/              node:test game-logic suite
 
