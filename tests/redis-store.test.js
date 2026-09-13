@@ -29,6 +29,7 @@ function rawUpstash() {
       hashes.set(k, h);
       return Object.keys(fields).length;
     },
+    async hget(k, f) { return hashes.get(k)?.get(f) ?? null; },
     async hgetall(k) { return [...(hashes.get(k) || new Map()).entries()].flat(); },
     async scard(k) { return sets.get(k)?.size || 0; },
     async sismember(k, m) { return sets.get(k)?.has(m) ? 1 : 0; }
@@ -54,4 +55,17 @@ test('polling an active game never starts a new one', async () => {
     assert.equal(again.gameId, first.gameId);
     assert.equal(again.status, 'active');
   }
+});
+
+test('a move context reads the game as an object and counts the attempt', async () => {
+  const store = createRedisStore(rawUpstash());
+  await getState(store, T0);
+  const ctx = await store.moveContext({ sid: 'a'.repeat(32), ipHash: 'ip', limit: 20, windowSec: 60 });
+  assert.equal(ctx.allowed, true);
+  assert.equal(ctx.id, '1');
+  assert.equal(ctx.game.status, 'active');
+  assert.equal(ctx.lastMover, false);
+  assert.equal(ctx.playedBefore, false);
+  assert.equal(ctx.movers, 0);
+  assert.deepEqual(ctx.stats, { games: 0, whiteWins: 0, blackWins: 0, draws: 0 });
 });

@@ -62,9 +62,23 @@ export default function Board({ fen, lastMove, canMove, onMove }) {
 
   const mine = (piece) => Boolean(piece && piece.pieceType && piece.pieceType[0] === turn);
 
+  // the side to move sits at the bottom; follows the server's position so the board
+  // turns once a move lands, not while a piece is still sliding into place
+  const orientation = serverFen.split(' ')[1] === 'b' ? 'black' : 'white';
+
+  // the checked king's square, if any
+  const checkSquare = useMemo(() => {
+    if (!game.inCheck()) return null;
+    for (const row of game.board()) {
+      for (const p of row) if (p && p.type === 'k' && p.color === turn) return p.square;
+    }
+    return null;
+  }, [game, turn]);
+
   const options = {
     id: 'crowd-board',
     position,
+    boardOrientation: orientation,
     allowDragging: canMove,
     showAnimations: true,
     animationDurationInMs: 180,
@@ -91,7 +105,13 @@ export default function Board({ fen, lastMove, canMove, onMove }) {
         s[lastMove.from] = { backgroundColor: 'var(--chess-last)' };
         s[lastMove.to] = { backgroundColor: 'var(--chess-last)' };
       }
-      if (selected) s[selected] = { backgroundColor: 'var(--chess-selected)' };
+      if (checkSquare) {
+        s[checkSquare] = {
+          backgroundColor: 'var(--chess-check)',
+          backgroundImage: 'radial-gradient(circle, var(--chess-check-glow) 0%, transparent 72%)'
+        };
+      }
+      if (selected) s[selected] = { ...s[selected], backgroundColor: 'var(--chess-selected)' };
       for (const m of targets) {
         s[m.to] = {
           ...s[m.to],

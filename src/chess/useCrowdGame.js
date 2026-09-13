@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const POLL_MS = 4000;
-const IDLE_POLL_MS = 15000;
+const POLL_MS = 2000;
+const IDLE_POLL_MS = 10000;
 const IDLE_AFTER_MS = 120000;
 const STATUS_TEXT = { 400: 'Bad Request', 403: 'Forbidden', 409: 'Conflict', 429: 'Too Many Requests', 503: 'Service Unavailable' };
-const movedKey = (id) => `chess:moved:${id}`;
+// the ply the board reached with this visitor's own move; while it's still that ply, they wait
+const mineKey = (id) => `chess:mine:${id}`;
 
 // A cached copy of the state can be a few seconds old: never step back to it.
 const newer = (prev, next) => {
@@ -17,7 +18,7 @@ export function useCrowdGame() {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
-  const [moved, setMoved] = useState(false);
+  const [myPly, setMyPly] = useState(null);
   const [pending, setPending] = useState(false);
   const lastActivity = useRef(Date.now());
   const knownGame = useRef(null);
@@ -73,24 +74,24 @@ export function useCrowdGame() {
     };
   }, [fetchState]);
 
-  // has this visitor already moved in the game on screen? (local first, then the server)
+  // did this visitor make the last move in the game on screen? (local first, then the server)
   const gameId = state?.gameId;
   useEffect(() => {
     if (!gameId || knownGame.current === gameId) return;
     knownGame.current = gameId;
-    let local = false;
-    try { local = localStorage.getItem(movedKey(gameId)) === '1'; } catch { /* private mode */ }
-    setMoved(local);
+    let local = null;
+    try { local = localStorage.getItem(mineKey(gameId)); } catch { /* private mode */ }
+    setMyPly(local == null ? null : Number(local));
     setNotice(null);
     fetch('/api/chess/me', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((me) => { if (me && String(me.gameId) === String(gameId) && me.moved) setMoved(true); })
+      .then((me) => { if (me && String(me.gameId) === String(gameId) && me.lastMover) setMyPly(me.ply); })
       .catch(() => {});
   }, [gameId]);
 
-  const rememberMoved = (id) => {
-    try { localStorage.setItem(movedKey(id), '1'); } catch { /* private mode */ }
-    setMoved(true);
+  const rememberMine = (id, ply) => {
+    try { localStorage.setItem(mineKey(id), String(ply)); } catch { /* private mode */ }
+    setMyPly(ply);
   };
 
   const submitMove = useCallback(async ({ from, to, promotion }) => {
@@ -107,11 +108,11 @@ export function useCrowdGame() {
       const body = await r.json().catch(() => ({}));
       if (r.ok && body.ok) {
         setState(body.state);
-        rememberMoved(body.state.gameId);
-        setNotice({ tone: 'ok', text: `Your move ${body.move.san} is in. One move per visitor — watch the game play out.` });
+        rememberMine(body.state.gameId, body.state.ply);
+        setNotice({ tone: 'ok', text: `Your move ${body.move.san} is in. You can move again once someone replies.` });
         return true;
       }
-      if (body.error === 'already-moved' || body.error === 'network-limit') rememberMoved(state.gameId);
+      if (body.error === 'consecutive') rememberMine(state.gameId, state.ply);
       setNotice({
         tone: r.status === 400 ? 'warn' : 'err',
         text: `${r.status} ${STATUS_TEXT[r.status] || 'Error'} — ${body.message || 'Move not accepted.'}`
@@ -126,6 +127,7 @@ export function useCrowdGame() {
     }
   }, [state, pending, fetchState]);
 
-  const canMove = Boolean(state && !error && state.status === 'active' && !moved && !pending);
-  return { state, error, notice, moved, pending, canMove, submitMove };
+  const waiting = Boolean(state) && myPly === state.ply; // the last move was theirs
+  const canMove = Boolean(state && !error && state.status === 'active' && !waiting && !pending);
+  return { state, error, notice, waiting, pending, canMove, submitMove };
 }

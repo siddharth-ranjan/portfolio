@@ -74,23 +74,28 @@ copies already sent, LinkedIn posts) have aged out.
 
 ## Crowd chess (`/chess`)
 
-One shared game of chess for every visitor. Each visitor gets **one move per game**;
-when a game ends, a new one starts 60 seconds later.
+One shared game of chess for every visitor. Anyone can move for the side to play, but
+**nobody moves twice in a row** — someone else has to reply first. When a game ends, a
+new one starts 60 seconds later.
 
 **How it works**
 - `chess.html` is a second Vite page (not prerendered, since it is live data);
   Vercel rewrites `/chess` to it.
 - State lives in **Upstash Redis**. `api/chess/state` returns the shared game and is
-  CDN-cached for 2s, so polling costs at most one database read per ~2s however many
+  CDN-cached for 1s, so polling costs at most one database read a second however many
   people watch. `api/chess/move` validates with chess.js, then commits through one Lua
-  script that atomically checks nobody moved first, this visitor hasn't moved, and their
-  network is under its cap. Key layout is documented at the top of `api/_lib/redisStore.js`.
+  script that atomically checks nobody moved first and this visitor didn't make the
+  previous move (the game hash keeps `lastSid`). Key layout is documented at the top of `api/_lib/redisStore.js`.
 - A visitor is an anonymous `chess_sid` cookie (HttpOnly). Raw IPs are never stored —
-  only a salted hash, to allow at most 3 moves per network per game and 20 attempts a minute.
+  only a salted hash, for the limit of 20 move attempts a minute per network. Clearing
+  cookies gets a fresh visitor id; for a portfolio game that's an accepted gap.
 
 **Setup (once)** — Vercel → project → Storage → Create → *Upstash for Redis* (free) →
 connect it to this project with **Production** and **Preview** ticked, then redeploy.
 Until then `/chess` shows "Crowd chess isn't connected to its database yet."
+The database is in Mumbai, so `vercel.json` pins functions to `"regions": ["bom1"]`;
+if the database ever moves, change the region with it (every move is several
+function → database calls, and a cross-ocean hop costs ~150ms each).
 
 **Reset a game** — set `CHESS_ADMIN_TOKEN` in Vercel's env vars, then
 `curl -X POST -H "Authorization: Bearer <token>" https://siddharthranjan.app/api/chess/reset`.

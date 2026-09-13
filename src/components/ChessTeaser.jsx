@@ -4,7 +4,7 @@ export default function ChessTeaser() {
     <section className="wrap block-tight">
       <a className="panel chess-teaser" href="/chess">
         <span className="tag">Off hours</span>
-        <span className="chess-teaser-title">Crowd chess — one shared game, one move per visitor</span>
+        <span className="chess-teaser-title">Crowd chess — one shared game, no two moves in a row</span>
         <span className="chess-teaser-go" aria-hidden="true">Make your move →</span>
       </a>
     </section>
