@@ -99,6 +99,7 @@ export function buildCommands(evict) {
       const state = evict();
       if (state === 'unavailable') return [['warn', 'evict: the request flow is not running in this browser']];
       if (state === 'pending') return [['dim', 'orders:8821 is already evicted — the next GET will miss']];
+      if (state === 'busy') return [['dim', 'evict: the last eviction is still playing out — try again after the next cache hit']];
       return [
         ['', 'redis> DEL orders:8821'],
         ['dim', '(integer) 1'],

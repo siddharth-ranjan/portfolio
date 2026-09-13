@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createEvictMachine } from './evictPhase.js';
 
 const CACHE = 5;
 const DB = 6;
@@ -33,8 +34,8 @@ export function useFlow(flowRef, railRef, { onStats, onLabel, onEvict, onEvictCl
     let onScreen = false;
     let waiters = [];
     let anims = [];
-    // awaitingHit: the forced miss has been served; the next cache hit closes the demo
-    let n = 0, hits = 0, evicted = false, awaitingHit = false;
+    let n = 0, hits = 0;
+    const evict = createEvictMachine(); // one eviction at a time — see evictPhase.js
 
     const live = () => runningRef.current && onScreen && !document.hidden && !stopped;
     const flush = () => {
@@ -105,10 +106,9 @@ export function useFlow(flowRef, railRef, { onStats, onLabel, onEvict, onEvictCl
 
     const cycle = () => {
       n++;
-      // a miss happens on schedule, or on the first request after someone evicts the key
-      const forced = evicted;
-      const miss = evicted || n % 6 === 3;
-      evicted = false;
+      // a miss happens on the first request after someone evicts the key, or on schedule
+      // (every six requests since the last miss), so an eviction reads as one miss, then hits
+      const { miss } = evict.start(n);
       const last = miss ? DB : CACHE;
       reset();
       boxes[0].classList.add('is-lit');
@@ -143,11 +143,7 @@ export function useFlow(flowRef, railRef, { onStats, onLabel, onEvict, onEvictCl
           if (stopped) return null;
           back.classList.remove('on');
           if (!miss) hits++;
-          if (forced) awaitingHit = true;
-          else if (!miss && awaitingHit) {
-            awaitingHit = false;
-            if (cbs.current.onEvictCleared) cbs.current.onEvictCleared();
-          }
+          if (evict.finish(miss) && cbs.current.onEvictCleared) cbs.current.onEvictCleared();
           cbs.current.onStats(
             `Live · ${n} requests · ${hits} cache hits · ${Math.round((hits / n) * 100)}% never reached mysql${HINT}`
           );
@@ -157,8 +153,8 @@ export function useFlow(flowRef, railRef, { onStats, onLabel, onEvict, onEvictCl
 
     const redis = boxes[CACHE];
     evictRef.current = () => {
-      if (evicted) return 'pending';
-      evicted = true;
+      const verdict = evict.tap();
+      if (verdict !== 'ok') return verdict; // ignored: already armed, or still playing out
       redis.classList.add('is-evicted');
       if (cbs.current.onEvict) cbs.current.onEvict();
       return live() ? 'ok' : 'paused';
