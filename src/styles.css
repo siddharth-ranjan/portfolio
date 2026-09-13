@@ -622,8 +622,10 @@ a.brand{color:inherit;text-decoration:none}
 :root{--chess-light:#3b4759;--chess-dark:#263142;
   --chess-last:color-mix(in srgb,var(--amber) 45%,#263142);
   --chess-selected:color-mix(in srgb,var(--blue) 55%,#263142);
-  --chess-target:color-mix(in srgb,var(--blue) 80%,transparent)}
+  --chess-target:color-mix(in srgb,var(--blue) 80%,transparent);
+  --chess-check:#b3262e;--chess-check-glow:#ff5a5f}
 [data-theme="light"]{--chess-light:#e9edf3;--chess-dark:#b6c1d0;
+  --chess-check:#e5484d;--chess-check-glow:#ff9da0;
   --chess-last:color-mix(in srgb,var(--amber) 38%,#e9edf3);
   --chess-selected:color-mix(in srgb,var(--blue) 35%,#e9edf3)}
 .chess-board{position:relative;max-width:560px;margin:0 auto}
