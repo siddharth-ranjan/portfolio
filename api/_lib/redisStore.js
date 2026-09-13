@@ -46,6 +46,17 @@ end
 return 'ok'
 `;
 
+// The client runs with automaticDeserialization off, which makes HGETALL come back as
+// the raw Redis reply: a flat [field, value, field, value, …] array, or [] when the
+// hash doesn't exist. Accept that and the object form.
+function toObject(reply) {
+  if (!reply) return {};
+  if (!Array.isArray(reply)) return reply;
+  const out = {};
+  for (let i = 0; i + 1 < reply.length; i += 2) out[reply[i]] = reply[i + 1];
+  return out;
+}
+
 export function createRedisStore(redis) {
   const newGame = async (now, fen) => {
     const id = String(await redis.incr(K.seq));
@@ -63,13 +74,13 @@ export function createRedisStore(redis) {
       return v == null ? null : String(v);
     },
     async getGame(id) {
-      const g = await redis.hgetall(K.game(id));
-      return g && Object.keys(g).length ? g : null;
+      const g = toObject(await redis.hgetall(K.game(id)));
+      return Object.keys(g).length ? g : null;
     },
     async moverCount(id) { return Number(await redis.scard(K.movers(id))) || 0; },
     async hasMoved(id, sid) { return Number(await redis.sismember(K.movers(id), sid)) === 1; },
     async getStats() {
-      const s = (await redis.hgetall(K.stats)) || {};
+      const s = toObject(await redis.hgetall(K.stats));
       return {
         games: Number(s.games) || 0, whiteWins: Number(s.whiteWins) || 0,
         blackWins: Number(s.blackWins) || 0, draws: Number(s.draws) || 0
