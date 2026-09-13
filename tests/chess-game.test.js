@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createMemoryStore } from '../api/_lib/memoryStore.js';
-import { getState, applyMove, ROLLOVER_MS } from '../api/_lib/game.js';
+import { getState, applyMove, ROLLOVER_MS, START_FEN } from '../api/_lib/game.js';
 
 const T0 = 1_700_000_000_000;
 const visitor = (n) => ({ sid: String(n).padStart(32, '0'), ipHash: `ip-${n}` });
@@ -159,4 +159,16 @@ test('a network making too many move attempts gets 429', async () => {
   }
   assert.equal(last.status, 429);
   assert.equal(last.body.error, 'rate-limited');
+});
+
+test('the version watchers poll changes with every move and every new game', async () => {
+  const store = createMemoryStore();
+  let s = await getState(store, T0);
+  assert.equal(await store.getVersion(), '1:0');
+  s = (await play(store, s, visitor(1), 'e2', 'e4')).body.state;
+  assert.equal(await store.getVersion(), '1:1');
+  await play(store, s, visitor(1), 'e7', 'e5'); // rejected: no change
+  assert.equal(await store.getVersion(), '1:1');
+  await store.forceNewGame(T0, START_FEN);
+  assert.equal(await store.getVersion(), '2:0');
 });

@@ -5,12 +5,44 @@ import { Chess } from 'chess.js';
 const START = new Chess().fen();
 const PIECE_NAME = { q: 'Queen', r: 'Rook', b: 'Bishop', n: 'Knight' };
 const UCI = /^([a-h][1-8])-?([a-h][1-8])([qrbn])?$/i;
+const GLYPH = { p: '♟', n: '♞', b: '♝', r: '♜', q: '♛' };
+const VALUE = { p: 1, n: 3, b: 3, r: 5, q: 9 };
+
+// pieces each side has taken, replayed from the move list (most valuable first)
+function captures(history) {
+  const game = new Chess();
+  const taken = { w: [], b: [] };
+  for (const san of history || []) {
+    let move;
+    try { move = game.move(san); } catch { break; }
+    if (move.captured) taken[move.color].push(move.captured);
+  }
+  for (const side of ['w', 'b']) taken[side].sort((a, b) => VALUE[b] - VALUE[a]);
+  return taken;
+}
+
+const worth = (pieces) => pieces.reduce((sum, p) => sum + VALUE[p], 0);
+
+function Dock({ side, taken }) {
+  const pieces = taken[side];
+  const lead = worth(pieces) - worth(taken[side === 'w' ? 'b' : 'w']);
+  const name = side === 'w' ? 'White' : 'Black';
+  return (
+    <div className="chess-dock" aria-label={`Captured by ${name}: ${pieces.length || 'none'}`}>
+      {pieces.map((p, i) => (
+        <span key={i} className={`chess-dock-piece ${side === 'w' ? 'is-black' : 'is-white'}`} aria-hidden="true">{GLYPH[p]}</span>
+      ))}
+      {lead > 0 && <span className="chess-dock-lead">+{lead}</span>}
+      {!pieces.length && <span className="chess-dock-empty">{name} · no captures</span>}
+    </div>
+  );
+}
 
 /**
  * The shared board. The server is the authority: a move is shown immediately
  * (optimistically) and rolled back if the server turns it down.
  */
-export default function Board({ fen, lastMove, canMove, onMove }) {
+export default function Board({ fen, lastMove, history, canMove, onMove }) {
   const serverFen = fen || START;
   const [optimistic, setOptimistic] = useState(null);
   const [selected, setSelected] = useState(null);
@@ -65,6 +97,8 @@ export default function Board({ fen, lastMove, canMove, onMove }) {
   // the side to move sits at the bottom; follows the server's position so the board
   // turns once a move lands, not while a piece is still sliding into place
   const orientation = serverFen.split(' ')[1] === 'b' ? 'black' : 'white';
+  const bottom = orientation[0]; // 'w' or 'b'
+  const taken = useMemo(() => captures(history), [history]);
 
   // the checked king's square, if any
   const checkSquare = useMemo(() => {
@@ -153,7 +187,9 @@ export default function Board({ fen, lastMove, canMove, onMove }) {
 
   return (
     <div className="chess-board">
+      <Dock side={bottom === 'w' ? 'b' : 'w'} taken={taken} />
       <Chessboard options={options} />
+      <Dock side={bottom} taken={taken} />
       {promotion && (
         <div className="chess-promo" role="dialog" aria-label="Choose a piece to promote to">
           <span className="tag">Promote to</span>
