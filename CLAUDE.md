@@ -14,10 +14,17 @@ siddharthranjan.me and both www hosts 308 to it (see README → Domains).
     src/entry-server.jsx   SSR entry; scripts/prerender.js injects the HTML into dist
     scripts/og-image.py    regenerates the link-preview card
     public/             favicon.svg + assets/ (resume.pdf, resume.png, icons) → served at /
+    chess.html          second Vite page → /chess (vercel.json rewrite), client-rendered
+    src/chess/          ChessPage, Board (react-chessboard v5), useCrowdGame (polling + moves)
+    api/chess/          Vercel functions: state (GET, CDN s-maxage=2), move (POST), me, reset
+    api/_lib/           game.js (chess.js rules), redisStore.js (Upstash + Lua commit),
+                        memoryStore.js (tests/dev), store.js (picks one), session.js, http.js
+    tests/              node:test game-logic suite
 
 ## Run / deploy
     npm install && npm run dev     # dev
     npm run build && npm run preview
+    npm test                       # chess game logic
 `build` = client build, then an SSR build, then `scripts/prerender.js` writes the
 rendered markup into `dist/index.html`; the browser hydrates it.
 Push to `main` → Vercel production build. `vercel.json` pins framework vite,
@@ -45,9 +52,19 @@ Push to `main` → Vercel production build. `vercel.json` pins framework vite,
   `data-theme` from localStorage before paint so light mode does not flash.
 - Link previews come from the static OG/Twitter tags in index.html plus
   `public/assets/og.png`; crawlers never run the JS.
+- Crowd chess: the server is the authority. Every move is re-validated with chess.js
+  and committed by the Lua script in `redisStore.js` (same game, same ply, visitor not
+  in movers, network under IP_CAP) — keep checks there, not only in JS. The memory store
+  must keep the same contract: `npm test` runs against it.
+- `vite.config.js` builds two pages and skips `rollupOptions.input` for the SSR build
+  (`isSsrBuild`), otherwise the prerender breaks. In dev, a middleware serves
+  `/api/chess/*` via `ssrLoadModule` over the in-memory store.
+- The board shows a move optimistically and rolls back if the server rejects it.
+  Board colours are CSS variables (`--chess-light`, `--chess-dark`, `--chess-last`, …).
 
 ## What is real vs illustrative
-Real: track record, résumé, links, contact form (opens the visitor's mail app).
+Real: track record, résumé, links, contact form (opens the visitor's mail app),
+and crowd chess at /chess (shared game state in Upstash Redis).
 Illustrative and labelled as such: the hop-03 pool ("Simulated pool"), latencies,
 cache hit/miss counter, lane picks, shell output. A scripted demo, not telemetry.
 The redis box is clickable (evicts the key so the next request misses); a pulsing
@@ -63,5 +80,7 @@ Overleaf, copy it over, then regenerate the phone fallback with
 `pdftoppm -r 150 -png -singlefile public/assets/resume.pdf public/assets/resume`.
 
 ## Open ideas (not done)
-- Nothing outstanding. The track record's undated rows show the issuer or venue
-  ("Anthropic · Microsoft", "VIT Chennai") instead of a date, by choice.
+- /chess needs Upstash connected in Vercel (Production + Preview); until then the API
+  answers 503 and the page says the database isn't connected.
+- The track record's undated rows show the issuer or venue ("Anthropic · Microsoft",
+  "VIT Chennai") instead of a date, by choice.

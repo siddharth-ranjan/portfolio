@@ -10,6 +10,7 @@ import PoolPanel from './components/PoolPanel.jsx';
 import Async from './components/Async.jsx';
 import Ownership from './components/Ownership.jsx';
 import Shell from './components/Shell.jsx';
+import ChessTeaser from './components/ChessTeaser.jsx';
 import TrackRecord from './components/TrackRecord.jsx';
 import Resume from './components/Resume.jsx';
 import Contact from './components/Contact.jsx';
@@ -48,6 +49,7 @@ export default function App() {
         <Async />
         <Ownership />
         <Shell />
+        <ChessTeaser />
         <TrackRecord />
         <Resume />
         <Contact />

@@ -4,7 +4,21 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "redirects": [
-    { "source": "/resume", "destination": "/#resume", "permanent": false },
-    { "source": "/image", "destination": "/", "permanent": false }
+    {
+      "source": "/resume",
+      "destination": "/#resume",
+      "permanent": false
+    },
+    {
+      "source": "/image",
+      "destination": "/",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/chess",
+      "destination": "/chess.html"
+    }
   ]
 }

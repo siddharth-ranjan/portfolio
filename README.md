@@ -12,6 +12,10 @@ distributed system, with the diagrams animating live.
       hooks/            useTheme useReveal usePool useFlow useScrollSpy
       shell/commands.js shell command map + typo suggestions
     public/             favicon.svg, assets/ (resume.pdf, resume.png, icons)
+      chess/            the /chess page: ChessPage, Board, useCrowdGame
+    api/chess/          Vercel functions: state, move, me, reset
+    api/_lib/           game logic (chess.js), Redis + in-memory stores, session
+    tests/              node:test suite for the game logic (`npm test`)
 
 ## Run
 
@@ -19,6 +23,7 @@ distributed system, with the diagrams animating live.
     npm run dev        # http://localhost:5173
     npm run build      # → dist/ (client build + SSR build + prerender)
     npm run preview    # serve the built output
+    npm test           # crowd chess game-logic tests
 
 ## Deploy
 
@@ -66,6 +71,33 @@ remove it (and `www.siddharthranjan.me`) from Vercel → Settings → Domains, t
 let it lapse at its registrar. Anyone still using an old `.me` link will get an
 error instead of the redirect from then on, so keep it until old links (résumé
 copies already sent, LinkedIn posts) have aged out.
+
+## Crowd chess (`/chess`)
+
+One shared game of chess for every visitor. Each visitor gets **one move per game**;
+when a game ends, a new one starts 60 seconds later.
+
+**How it works**
+- `chess.html` is a second Vite page (not prerendered, since it is live data);
+  Vercel rewrites `/chess` to it.
+- State lives in **Upstash Redis**. `api/chess/state` returns the shared game and is
+  CDN-cached for 2s, so polling costs at most one database read per ~2s however many
+  people watch. `api/chess/move` validates with chess.js, then commits through one Lua
+  script that atomically checks nobody moved first, this visitor hasn't moved, and their
+  network is under its cap. Key layout is documented at the top of `api/_lib/redisStore.js`.
+- A visitor is an anonymous `chess_sid` cookie (HttpOnly). Raw IPs are never stored —
+  only a salted hash, to allow at most 3 moves per network per game and 20 attempts a minute.
+
+**Setup (once)** — Vercel → project → Storage → Create → *Upstash for Redis* (free) →
+connect it to this project with **Production** and **Preview** ticked, then redeploy.
+Until then `/chess` shows "Crowd chess isn't connected to its database yet."
+
+**Reset a game** — set `CHESS_ADMIN_TOKEN` in Vercel's env vars, then
+`curl -X POST -H "Authorization: Bearer <token>" https://siddharthranjan.app/api/chess/reset`.
+Without the variable the endpoint doesn't exist (404).
+
+**Locally** — `npm run dev` serves the API from the same handlers over an in-memory
+store (no Redis needed); open http://localhost:5173/chess.html.
 
 ## Notes
 
