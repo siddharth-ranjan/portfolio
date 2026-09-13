@@ -14,7 +14,7 @@ siddharthranjan.me and both www hosts 308 to it (see README → Domains).
     src/entry-server.jsx   SSR entry; scripts/prerender.js injects the HTML into dist
     scripts/og-image.py    regenerates the link-preview card
     public/             favicon.svg + assets/ (resume.pdf, resume.png, icons) → served at /
-    chess.html          second Vite page → /chess (vercel.json rewrite), client-rendered
+    chess.html          second Vite page → /chess (vercel.json rewrite); static shell prerendered
     src/chess/          ChessPage, Board (react-chessboard v5), useCrowdGame (polling + moves)
     api/chess/          Vercel functions: state (GET), version (GET, polled), move, react, me, reset
     api/_lib/           game.js (chess.js rules), redisStore.js (Upstash + Lua commit),
@@ -51,7 +51,10 @@ two together.
   motion* freezes it via `.motion-paused`. Scroll-reveal stays off under reduced motion.
 - The shell input is uncontrolled on purpose: its own cursor position is the
   truth and the prompt mirrors it.
-- The page is prerendered, so nothing browser-only may run during render:
+- Both pages are prerendered (`render` and `renderChess` in entry-server.jsx), so nothing
+  browser-only may run during render. On /chess, Board shows a plain CSS board until mounted
+  (react-chessboard is browser-only) and live data only arrives in effects, so hydration matches.
+  Main page:
   `useTheme` starts at 'dark' and adopts localStorage in an effect, `Shell` guards
   `matchMedia`, `Contact` fills its Idempotency-Key after mount. index.html sets
   `data-theme` from localStorage before paint so light mode does not flash.

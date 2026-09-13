@@ -210,7 +210,7 @@ export default function ChessPage() {
                 <span className="tag">{state ? `${state.movers} ${state.movers === 1 ? 'visitor' : 'visitors'} played` : '—'}</span>
               </div>
               <ol className="chess-moves">
-                {len === 0 && <li className="chess-moves-empty">No moves yet. The first one could be yours.</li>}
+                {len === 0 && <li className="chess-moves-empty">{state ? 'No moves yet. The first one could be yours.' : 'Loading the game…'}</li>}
                 {pairs(history).map(([n, white, black]) => (
                   <li key={n}>
                     <span className="n">{n}.</span>
