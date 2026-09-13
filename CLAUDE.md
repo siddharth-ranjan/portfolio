@@ -86,7 +86,10 @@ Illustrative and labelled as such: the hop-03 pool ("Simulated pool"), latencies
 cache hit/miss counter, lane picks, shell output. A scripted demo, not telemetry.
 The redis box is clickable (evicts the key so the next request misses); a pulsing
 "click to evict" tag on it advertises that; it hides while an eviction plays out
-(the forced miss) and returns on the next cache hit.
+(the forced miss) and returns on the next cache hit. Taps in between are ignored, and the
+demo's own misses come every six requests counted from the last miss (first at request 3),
+so one eviction always reads: one miss, then hits. Rules live in `src/hooks/evictPhase.js`
+(tested in `tests/evict.test.js`).
 The pool is interactive: clicking a healthy instance drains it, ejects it after two
 failed checks, then boots a replacement that warms up before taking traffic.
 
