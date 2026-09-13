@@ -6,6 +6,7 @@ import { send, readJson, isLocalHost } from '../_lib/http.js';
 export default async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { ok: false, error: 'method' }, { Allow: 'POST' });
   const headers = { 'Cache-Control': 'no-store' };
+  const started = performance.now();
   try {
     const store = getStore();
     let sid = readSid(req);
@@ -14,11 +15,9 @@ export default async function handler(req, res) {
       headers['Set-Cookie'] = sidCookie(sid, !isLocalHost(req));
     }
     const ip = ipHash(req, ipSalt());
-    if (!(await store.rateLimit(ip, 20, 60))) {
-      return send(res, 429, { ok: false, error: 'rate-limited', message: 'Too many attempts. Give it a minute.' }, headers);
-    }
     const body = await readJson(req);
     const { status, body: out } = await applyMove(store, { ...body, sid, ipHash: ip }, Date.now());
+    headers['Server-Timing'] = `app;dur=${Math.round(performance.now() - started)}`;
     return send(res, status, out, headers);
   } catch (err) {
     if (err.status !== 503 && err.status !== 413) console.error('chess/move', err);

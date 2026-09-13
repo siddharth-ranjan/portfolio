@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const POLL_MS = 4000;
-const IDLE_POLL_MS = 15000;
+const POLL_MS = 2000;
+const IDLE_POLL_MS = 10000;
 const IDLE_AFTER_MS = 120000;
 const STATUS_TEXT = { 400: 'Bad Request', 403: 'Forbidden', 409: 'Conflict', 429: 'Too Many Requests', 503: 'Service Unavailable' };
 const movedKey = (id) => `chess:moved:${id}`;

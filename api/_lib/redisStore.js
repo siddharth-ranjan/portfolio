@@ -57,6 +57,11 @@ function toObject(reply) {
   return out;
 }
 
+const statsFrom = (s) => ({
+  games: Number(s.games) || 0, whiteWins: Number(s.whiteWins) || 0,
+  blackWins: Number(s.blackWins) || 0, draws: Number(s.draws) || 0
+});
+
 export function createRedisStore(redis) {
   const newGame = async (now, fen) => {
     const id = String(await redis.incr(K.seq));
@@ -79,11 +84,37 @@ export function createRedisStore(redis) {
     },
     async moverCount(id) { return Number(await redis.scard(K.movers(id))) || 0; },
     async hasMoved(id, sid) { return Number(await redis.sismember(K.movers(id), sid)) === 1; },
-    async getStats() {
-      const s = toObject(await redis.hgetall(K.stats));
+    async getStats() { return statsFrom(toObject(await redis.hgetall(K.stats))); },
+
+    // Round trips matter: each is a request from the function to Upstash. The client
+    // auto-pipelines commands started together into ONE HTTP call, so these fire in
+    // parallel batches. getState costs 2 trips; a move costs 3 (context, commit).
+    async snapshot() {
+      const id = await store.getCurrent();
+      if (!id) return { id: null, game: null, movers: 0, stats: statsFrom({}) };
+      const [g, count, st] = await Promise.all([
+        redis.hgetall(K.game(id)), redis.scard(K.movers(id)), redis.hgetall(K.stats)
+      ]);
+      const game = toObject(g);
+      return { id, game: Object.keys(game).length ? game : null, movers: Number(count) || 0, stats: statsFrom(toObject(st)) };
+    },
+    async moveContext({ sid, ipHash, limit, windowSec }) {
+      const rl = K.rl(ipHash);
+      // batch 1: count the attempt (SET NX keeps the window's TTL, INCR counts) and find the game
+      const [, attempts, rawId] = await Promise.all([
+        redis.set(rl, 0, { nx: true, ex: windowSec }), redis.incr(rl), redis.get(K.current)
+      ]);
+      const allowed = Number(attempts) <= limit;
+      const id = rawId == null ? null : String(rawId);
+      if (!allowed || !id) return { allowed, id, game: null, movers: 0, stats: statsFrom({}), moved: false };
+      // batch 2: the game, whether this visitor already moved, and the counters
+      const [g, moved, count, st] = await Promise.all([
+        redis.hgetall(K.game(id)), redis.sismember(K.movers(id), sid), redis.scard(K.movers(id)), redis.hgetall(K.stats)
+      ]);
+      const game = toObject(g);
       return {
-        games: Number(s.games) || 0, whiteWins: Number(s.whiteWins) || 0,
-        blackWins: Number(s.blackWins) || 0, draws: Number(s.draws) || 0
+        allowed, id, game: Object.keys(game).length ? game : null,
+        moved: Number(moved) === 1, movers: Number(count) || 0, stats: statsFrom(toObject(st))
       };
     },
     async startGame(prevId, now, fen) {

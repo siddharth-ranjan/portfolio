@@ -81,7 +81,7 @@ when a game ends, a new one starts 60 seconds later.
 - `chess.html` is a second Vite page (not prerendered, since it is live data);
   Vercel rewrites `/chess` to it.
 - State lives in **Upstash Redis**. `api/chess/state` returns the shared game and is
-  CDN-cached for 2s, so polling costs at most one database read per ~2s however many
+  CDN-cached for 1s, so polling costs at most one database read a second however many
   people watch. `api/chess/move` validates with chess.js, then commits through one Lua
   script that atomically checks nobody moved first, this visitor hasn't moved, and their
   network is under its cap. Key layout is documented at the top of `api/_lib/redisStore.js`.
@@ -91,6 +91,9 @@ when a game ends, a new one starts 60 seconds later.
 **Setup (once)** — Vercel → project → Storage → Create → *Upstash for Redis* (free) →
 connect it to this project with **Production** and **Preview** ticked, then redeploy.
 Until then `/chess` shows "Crowd chess isn't connected to its database yet."
+The database is in Mumbai, so `vercel.json` pins functions to `"regions": ["bom1"]`;
+if the database ever moves, change the region with it (every move is several
+function → database calls, and a cross-ocean hop costs ~150ms each).
 
 **Reset a game** — set `CHESS_ADMIN_TOKEN` in Vercel's env vars, then
 `curl -X POST -H "Authorization: Bearer <token>" https://siddharthranjan.app/api/chess/reset`.

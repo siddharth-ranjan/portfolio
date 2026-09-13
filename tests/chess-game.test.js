@@ -125,3 +125,32 @@ test('the per-minute attempt limit resets after its window', async () => {
   assert.equal(await store.rateLimit('ip', 20, 60, T0), false);
   assert.equal(await store.rateLimit('ip', 20, 60, T0 + 60_001), true);
 });
+
+test('the state sent back with a move matches a fresh read', async () => {
+  const store = createMemoryStore();
+  const r = await play(store, await getState(store, T0), visitor(1), 'e2', 'e4');
+  assert.deepEqual(r.body.state, await getState(store, T0));
+});
+
+test('the state sent back with a game-ending move matches a fresh read, stats included', async () => {
+  const store = createMemoryStore();
+  let s = await getState(store, T0);
+  let r;
+  for (const [i, [from, to]] of [['f2', 'f3'], ['e7', 'e5'], ['g2', 'g4'], ['d8', 'h4']].entries()) {
+    r = await play(store, s, visitor(i + 1), from, to);
+    s = r.body.state;
+  }
+  assert.equal(r.body.state.status, 'checkmate');
+  assert.deepEqual(r.body.state, await getState(store, T0));
+});
+
+test('a network making too many move attempts gets 429', async () => {
+  const store = createMemoryStore();
+  const s = await getState(store, T0);
+  let last;
+  for (let i = 0; i < 21; i++) {
+    last = await applyMove(store, { gameId: s.gameId, ply: 999, from: 'e2', to: 'e4', sid: String(i).padStart(32, '0'), ipHash: 'busy' }, T0);
+  }
+  assert.equal(last.status, 429);
+  assert.equal(last.body.error, 'rate-limited');
+});

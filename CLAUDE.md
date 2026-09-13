@@ -16,7 +16,7 @@ siddharthranjan.me and both www hosts 308 to it (see README → Domains).
     public/             favicon.svg + assets/ (resume.pdf, resume.png, icons) → served at /
     chess.html          second Vite page → /chess (vercel.json rewrite), client-rendered
     src/chess/          ChessPage, Board (react-chessboard v5), useCrowdGame (polling + moves)
-    api/chess/          Vercel functions: state (GET, CDN s-maxage=2), move (POST), me, reset
+    api/chess/          Vercel functions: state (GET, CDN s-maxage=1), move (POST), me, reset
     api/_lib/           game.js (chess.js rules), redisStore.js (Upstash + Lua commit),
                         memoryStore.js (tests/dev), store.js (picks one), session.js, http.js
     tests/              node:test game-logic suite
@@ -28,7 +28,9 @@ siddharthranjan.me and both www hosts 308 to it (see README → Domains).
 `build` = client build, then an SSR build, then `scripts/prerender.js` writes the
 rendered markup into `dist/index.html`; the browser hydrates it.
 Push to `main` → Vercel production build. `vercel.json` pins framework vite,
-`npm run build`, output `dist`, and keeps the /resume and /image redirects.
+`npm run build`, output `dist`, keeps the /resume and /image redirects, and pins
+functions to `bom1` (Mumbai) — the same region as the Upstash database. Move the
+two together.
 
 ## Conventions
 - Vite hashes bundle filenames, so no manual cache-busting (the old `?v=N` is gone).
@@ -59,6 +61,11 @@ Push to `main` → Vercel production build. `vercel.json` pins framework vite,
 - `vite.config.js` builds two pages and skips `rollupOptions.input` for the SSR build
   (`isSsrBuild`), otherwise the prerender breaks. In dev, a middleware serves
   `/api/chess/*` via `ssrLoadModule` over the in-memory store.
+- Keep Redis round trips low — each one is a request from the Vercel function to
+  Upstash. `@upstash/redis` auto-pipelines commands started together (Promise.all)
+  into one HTTP call: `getState` = 2 trips (current id, then game/movers/stats), a
+  move = 3 (attempt count + id, game context, Lua commit). The move's response state
+  is built from what was committed, never re-read. Responses carry `Server-Timing`.
 - The board shows a move optimistically and rolls back if the server rejects it.
   Board colours are CSS variables (`--chess-light`, `--chess-dark`, `--chess-last`, …).
 

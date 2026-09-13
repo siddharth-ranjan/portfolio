@@ -1,5 +1,7 @@
 // In-process store with the same contract as redisStore. Used by the tests and by
 // `npm run dev` when no Upstash credentials are present. Not for production.
+const emptyStats = () => ({ games: 0, whiteWins: 0, blackWins: 0, draws: 0 });
+
 export function createMemoryStore() {
   let current = null;
   let seq = 0;
@@ -8,7 +10,7 @@ export function createMemoryStore() {
   const ips = new Map();
   const locks = new Set();
   const limits = new Map();
-  const stats = { games: 0, whiteWins: 0, blackWins: 0, draws: 0 };
+  const stats = emptyStats();
 
   const newGame = (now, fen) => {
     seq += 1;
@@ -20,7 +22,7 @@ export function createMemoryStore() {
     return current;
   };
 
-  return {
+  const store = {
     async getCurrent() { return current; },
     async getGame(id) {
       const g = games.get(String(id));
@@ -29,6 +31,19 @@ export function createMemoryStore() {
     async moverCount(id) { return movers.get(String(id))?.size || 0; },
     async hasMoved(id, sid) { return Boolean(movers.get(String(id))?.has(sid)); },
     async getStats() { return { ...stats }; },
+
+    // everything getState needs
+    async snapshot() {
+      const id = current;
+      const g = id ? games.get(id) : null;
+      return { id, game: g ? { ...g } : null, movers: movers.get(id)?.size || 0, stats: { ...stats } };
+    },
+    // everything a move needs, with the attempt counted against the network's limit
+    async moveContext({ sid, ipHash, limit, windowSec }, now = Date.now()) {
+      const allowed = await store.rateLimit(ipHash, limit, windowSec, now);
+      const snap = await store.snapshot();
+      return { allowed, ...snap, moved: Boolean(snap.id && movers.get(snap.id)?.has(sid)) };
+    },
 
     async startGame(prevId, now, fen) {
       const lock = String(prevId || 0);
@@ -86,4 +101,5 @@ export function createMemoryStore() {
       });
     }
   };
+  return store;
 }
