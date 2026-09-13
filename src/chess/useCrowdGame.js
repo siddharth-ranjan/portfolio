@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const POLL_MS = 2000;
-const IDLE_POLL_MS = 10000;
-const IDLE_AFTER_MS = 120000;
+const POLL_MS = 1000;
+const IDLE_POLL_MS = 5000;
+const IDLE_AFTER_MS = 5 * 60_000; // no clicks, keys or moves for this long
+const second = () => Math.floor(Date.now() / 1000);
+// is version "{game}:{ply}" ahead of the state on screen?
+const versionAhead = (v, shown) => {
+  const [game, ply] = v.split(':').map(Number);
+  return game !== Number(shown.gameId) ? game > Number(shown.gameId) : ply > shown.ply;
+};
 const STATUS_TEXT = { 400: 'Bad Request', 403: 'Forbidden', 409: 'Conflict', 429: 'Too Many Requests', 503: 'Service Unavailable' };
 // the ply the board reached with this visitor's own move; while it's still that ply, they wait
 const mineKey = (id) => `chess:mine:${id}`;
@@ -23,17 +29,23 @@ export function useCrowdGame() {
   const lastActivity = useRef(Date.now());
   const knownGame = useRef(null);
 
-  const fetchState = useCallback(async ({ fresh = false } = {}) => {
+  const current = useRef(null); // the state on screen, for the poll loop
+
+  // `key` picks the CDN copy: `v=` a known version, `s=` this second, `t=` bypass (after a conflict)
+  const fetchState = useCallback(async (key = `s=${second()}`) => {
     try {
-      // `fresh` skips the 2s CDN copy — only used after a conflict
-      const r = await fetch(`/api/chess/state${fresh ? `?t=${Date.now()}` : ''}`, { headers: { accept: 'application/json' } });
+      const r = await fetch(`/api/chess/state?${key}`, { headers: { accept: 'application/json' } });
       const body = await r.json().catch(() => ({}));
       if (!r.ok) {
         setError({ kind: r.status === 503 ? 'setup' : 'down', message: body.message || 'Crowd chess is unavailable right now.' });
         return null;
       }
       setError(null);
-      setState((prev) => (newer(prev, body) ? body : prev));
+      if (newer(current.current, body)) {
+        if (current.current && body.ply !== current.current.ply) lastActivity.current = Date.now(); // a live game keeps polling fast
+        current.current = body;
+        setState(body);
+      }
       return body;
     } catch {
       setError({ kind: 'down', message: "Can't reach the game right now." });
@@ -41,7 +53,25 @@ export function useCrowdGame() {
     }
   }, []);
 
-  // poll while the tab is visible; slow down once the visitor has gone quiet
+  // One poll: ask for the tiny version; load the full state only when the board changed,
+  // or when a finished game is due to be replaced.
+  const poll = useCallback(async () => {
+    const shown = current.current;
+    if (!shown) return fetchState();
+    try {
+      const r = await fetch(`/api/chess/version?s=${second()}`, { headers: { accept: 'application/json' } });
+      if (!r.ok) return fetchState();
+      const { v } = await r.json();
+      if (v == null) return fetchState();
+      if (v !== `${shown.gameId}:${shown.ply}` && versionAhead(v, shown)) return fetchState(`v=${v}`);
+      if (shown.status !== 'active' && Date.now() >= shown.nextGameAt) return fetchState();
+      return shown;
+    } catch {
+      return fetchState();
+    }
+  }, [fetchState]);
+
+  // poll while the tab is visible; slow down once nothing has happened for a while
   useEffect(() => {
     let alive = true;
     let timer;
@@ -49,7 +79,7 @@ export function useCrowdGame() {
     const tick = async () => {
       if (!alive) return;
       // always load once, even in a background tab; after that, only poll while visible
-      if (first || document.visibilityState === 'visible') await fetchState();
+      if (first || document.visibilityState === 'visible') await poll();
       first = false;
       if (!alive) return;
       const idle = Date.now() - lastActivity.current > IDLE_AFTER_MS;
@@ -60,7 +90,7 @@ export function useCrowdGame() {
     const onVisible = () => {
       if (document.visibilityState !== 'visible') return;
       wake();
-      fetchState();
+      poll();
     };
     window.addEventListener('pointerdown', wake);
     window.addEventListener('keydown', wake);
@@ -72,7 +102,7 @@ export function useCrowdGame() {
       window.removeEventListener('keydown', wake);
       document.removeEventListener('visibilitychange', onVisible);
     };
-  }, [fetchState]);
+  }, [poll]);
 
   // did this visitor make the last move in the game on screen? (local first, then the server)
   const gameId = state?.gameId;
@@ -107,6 +137,7 @@ export function useCrowdGame() {
       });
       const body = await r.json().catch(() => ({}));
       if (r.ok && body.ok) {
+        current.current = body.state;
         setState(body.state);
         rememberMine(body.state.gameId, body.state.ply);
         setNotice({ tone: 'ok', text: `Your move ${body.move.san} is in. You can move again once someone replies.` });
@@ -117,7 +148,7 @@ export function useCrowdGame() {
         tone: r.status === 400 ? 'warn' : 'err',
         text: `${r.status} ${STATUS_TEXT[r.status] || 'Error'} — ${body.message || 'Move not accepted.'}`
       });
-      if (r.status === 409) await fetchState({ fresh: true });
+      if (r.status === 409) await fetchState(`t=${Date.now()}`);
       return false;
     } catch {
       setNotice({ tone: 'err', text: "Couldn't send your move. Check your connection and try again." });

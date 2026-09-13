@@ -16,7 +16,7 @@ siddharthranjan.me and both www hosts 308 to it (see README → Domains).
     public/             favicon.svg + assets/ (resume.pdf, resume.png, icons) → served at /
     chess.html          second Vite page → /chess (vercel.json rewrite), client-rendered
     src/chess/          ChessPage, Board (react-chessboard v5), useCrowdGame (polling + moves)
-    api/chess/          Vercel functions: state (GET, CDN s-maxage=1), move (POST), me, reset
+    api/chess/          Vercel functions: state (GET), version (GET, polled), move, me, reset
     api/_lib/           game.js (chess.js rules), redisStore.js (Upstash + Lua commit),
                         memoryStore.js (tests/dev), store.js (picks one), session.js, http.js
     tests/              node:test game-logic suite
@@ -66,6 +66,10 @@ two together.
   into one HTTP call: `getState` = 2 trips (current id, then game/movers/stats), a
   move = 3 (attempt count + id, game context, Lua commit). The move's response state
   is built from what was committed, never re-read. Responses carry `Server-Timing`.
+- Live updates: the page polls `/api/chess/version?s={epoch second}` every second (one
+  Redis GET of `chess:ver` = "{game}:{ply}", shared per second by the CDN) and fetches
+  `/api/chess/state?v={version}` only when it changed. Every write that changes the
+  board must update `chess:ver` (Lua commit, new game) or watchers never see it.
 - The board shows a move optimistically and rolls back if the server rejects it.
   Board colours are CSS variables (`--chess-light`, `--chess-dark`, `--chess-last`, …).
 

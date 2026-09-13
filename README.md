@@ -81,9 +81,10 @@ new one starts 60 seconds later.
 **How it works**
 - `chess.html` is a second Vite page (not prerendered, since it is live data);
   Vercel rewrites `/chess` to it.
-- State lives in **Upstash Redis**. `api/chess/state` returns the shared game and is
-  CDN-cached for 1s, so polling costs at most one database read a second however many
-  people watch. `api/chess/move` validates with chess.js, then commits through one Lua
+- State lives in **Upstash Redis**. Watching browsers poll `api/chess/version` every
+  second — a single Redis GET of `chess:ver` ("{game}:{ply}"), which the CDN shares
+  between everyone polling in the same second — and fetch the full `api/chess/state`
+  only when it changes, so a move shows up elsewhere within about a second. `api/chess/move` validates with chess.js, then commits through one Lua
   script that atomically checks nobody moved first and this visitor didn't make the
   previous move (the game hash keeps `lastSid`). Key layout is documented at the top of `api/_lib/redisStore.js`.
 - A visitor is an anonymous `chess_sid` cookie (HttpOnly). Raw IPs are never stored —

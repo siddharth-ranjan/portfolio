@@ -1,5 +1,6 @@
 // Upstash Redis store. Keys:
 //   chess:current            id of the game being played
+//   chess:ver                "{id}:{ply}" — changes on every move and new game; watchers poll it
 //   chess:seq                game id sequence
 //   chess:game:{id}          hash: fen pgn ply status result startedAt lastMoveAt endedAt lastMove lastSid
 //   chess:game:{id}:movers   set of visitor ids who have moved in that game (for the count)
@@ -8,6 +9,7 @@
 //   chess:rl:{ipHash}        per-minute move-attempt counter
 const K = {
   current: 'chess:current',
+  ver: 'chess:ver',
   seq: 'chess:seq',
   stats: 'chess:stats',
   game: (id) => `chess:game:${id}`,
@@ -30,6 +32,7 @@ redis.call('HSET', KEYS[1],
   'fen', ARGV[3], 'pgn', ARGV[4], 'ply', tonumber(ARGV[1]) + 1, 'lastMoveAt', ARGV[5],
   'status', ARGV[6], 'result', ARGV[7], 'endedAt', ARGV[8], 'lastMove', ARGV[9], 'lastSid', ARGV[2])
 redis.call('SADD', KEYS[2], ARGV[2])
+redis.call('SET', KEYS[4], ARGV[10] .. ':' .. (tonumber(ARGV[1]) + 1))
 if ARGV[6] ~= 'active' then
   redis.call('HINCRBY', KEYS[3], 'games', 1)
   if ARGV[7] == '1-0' then redis.call('HINCRBY', KEYS[3], 'whiteWins', 1)
@@ -64,7 +67,7 @@ export function createRedisStore(redis) {
       fen, pgn: '', ply: 0, status: 'active', result: '',
       startedAt: now, lastMoveAt: '', endedAt: '', lastMove: '', lastSid: ''
     });
-    await redis.set(K.current, id);
+    await Promise.all([redis.set(K.current, id), redis.set(K.ver, `${id}:0`)]);
     return id;
   };
 
@@ -79,6 +82,11 @@ export function createRedisStore(redis) {
     },
     async moverCount(id) { return Number(await redis.scard(K.movers(id))) || 0; },
     async isLastMover(id, sid) { return Boolean(sid) && String(await redis.hget(K.game(id), 'lastSid')) === sid; },
+    // one command: what watchers poll to learn a move happened
+    async getVersion() {
+      const v = await redis.get(K.ver);
+      return v == null ? null : String(v);
+    },
     async getStats() { return statsFrom(toObject(await redis.hgetall(K.stats))); },
 
     // Round trips matter: each is a request from the function to Upstash. The client
@@ -122,9 +130,9 @@ export function createRedisStore(redis) {
     async commit(id, m) {
       const out = await redis.eval(
         COMMIT,
-        [K.game(id), K.movers(id), K.stats],
+        [K.game(id), K.movers(id), K.stats, K.ver],
         [String(m.ply), m.sid, m.fen, m.pgn, String(m.lastMoveAt),
-          m.status, m.result, String(m.endedAt), m.lastMove]
+          m.status, m.result, String(m.endedAt), m.lastMove, String(id)]
       );
       return String(out);
     },

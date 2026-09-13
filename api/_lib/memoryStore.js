@@ -5,6 +5,7 @@ const emptyStats = () => ({ games: 0, whiteWins: 0, blackWins: 0, draws: 0 });
 export function createMemoryStore() {
   let current = null;
   let seq = 0;
+  let ver = null;
   const games = new Map();
   const movers = new Map();
   const locks = new Set();
@@ -14,6 +15,7 @@ export function createMemoryStore() {
   const newGame = (now, fen) => {
     seq += 1;
     current = String(seq);
+    ver = `${current}:0`;
     games.set(current, {
       fen, pgn: '', ply: '0', status: 'active', result: '',
       startedAt: String(now), lastMoveAt: '', endedAt: '', lastMove: '', lastSid: ''
@@ -29,6 +31,7 @@ export function createMemoryStore() {
     },
     async moverCount(id) { return movers.get(String(id))?.size || 0; },
     async isLastMover(id, sid) { return Boolean(sid) && games.get(String(id))?.lastSid === sid; },
+    async getVersion() { return ver; },
     async getStats() { return { ...stats }; },
 
     // everything getState needs
@@ -71,6 +74,7 @@ export function createMemoryStore() {
       const set = movers.get(key) || new Set();
       set.add(m.sid);
       movers.set(key, set);
+      ver = `${key}:${g.ply}`;
       if (m.status !== 'active') {
         stats.games += 1;
         if (m.result === '1-0') stats.whiteWins += 1;
@@ -94,6 +98,7 @@ export function createMemoryStore() {
     _seed(id, fields) {
       current = String(id);
       seq = Math.max(seq, Number(id));
+      ver = `${id}:${fields.ply || 0}`;
       games.set(String(id), {
         fen: '', pgn: '', ply: '0', status: 'active', result: '',
         startedAt: '0', lastMoveAt: '', endedAt: '', lastMove: '', lastSid: '', ...fields

@@ -82,6 +82,7 @@ export default function ChessPage() {
                 <Board
                   fen={state?.fen}
                   lastMove={state?.lastMove}
+                  history={state?.history}
                   canMove={canMove}
                   onMove={submitMove}
                 />

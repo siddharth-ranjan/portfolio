@@ -69,3 +69,10 @@ test('a move context reads the game as an object and counts the attempt', async 
   assert.equal(ctx.movers, 0);
   assert.deepEqual(ctx.stats, { games: 0, whiteWins: 0, blackWins: 0, draws: 0 });
 });
+
+test('starting a game sets the version watchers poll', async () => {
+  const store = createRedisStore(rawUpstash());
+  assert.equal(await store.getVersion(), null);
+  await getState(store, T0);
+  assert.equal(await store.getVersion(), '1:0');
+});
