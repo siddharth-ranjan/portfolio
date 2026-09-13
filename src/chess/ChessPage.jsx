@@ -77,7 +77,7 @@ function topReaction(counts) {
 
 export default function ChessPage() {
   const [theme, setTheme] = useTheme();
-  const { state, error, notice, waiting, pending, canMove, submitMove, react, myReactions } = useCrowdGame();
+  const { state, error, notice, waiting, pending, canMove, submitMove, react, myReactions, asleep } = useCrowdGame();
   const now = useClock(Boolean(state?.nextGameAt));
   const side = state?.turn === 'w' ? 'White' : 'Black';
   const history = state?.history || [];
@@ -116,6 +116,9 @@ export default function ChessPage() {
     else you = `Your turn: play a move for ${side}.`;
   }
 
+  // polling stopped after 10 minutes untouched (pollSchedule.js); any input resumes it
+  if (asleep && state && !error) you = 'Paused while you were away — move the mouse or tap to catch up.';
+
   const cell = (ply, san) => {
     const top = topReaction(state?.reactions?.[ply]);
     const cls = `chess-move${viewing == null && ply === len ? ' last' : ''}${viewing === ply ? ' viewing' : ''}`;
@@ -147,8 +150,8 @@ export default function ChessPage() {
             <div className="panel chess-board-panel">
               <div className="panel-head">
                 <span className="tag">{state ? `Game #${state.gameId}` : 'Game'}</span>
-                <span className={`tag chess-live${state && !error && viewing == null ? ' is-live' : ''}`}>
-                  {error ? 'offline' : viewing == null ? 'live' : 'replay'}
+                <span className={`tag chess-live${state && !error && viewing == null && !asleep ? ' is-live' : ''}`}>
+                  {error ? 'offline' : viewing != null ? 'replay' : asleep ? 'paused' : 'live'}
                 </span>
               </div>
               <div className="chess-board-wrap">
@@ -195,7 +198,7 @@ export default function ChessPage() {
               )}
 
               <p className="chess-status" role="status" aria-live="polite">{statusLine(state, error, now)}</p>
-              {you && <p className={`chess-you${waiting || viewing != null ? ' is-done' : ''}`}>{you}</p>}
+              {you && <p className={`chess-you${waiting || viewing != null || asleep ? ' is-done' : ''}`}>{you}</p>}
               {notice && <p className={`chess-notice ${notice.tone}`}>{notice.text}</p>}
             </div>
 
