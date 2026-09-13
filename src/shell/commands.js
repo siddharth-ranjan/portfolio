@@ -14,6 +14,7 @@ export function buildCommands(evict) {
       ['', '  stack      the tools in play'],
       ['', '  projects   track record'],
       ['', '  contact    how to reach me'],
+      ['', '  chess      one shared game, one move per visitor'],
       ['', '  clear      wipe the screen']
     ],
     whoami: () => [
@@ -107,6 +108,11 @@ export function buildCommands(evict) {
           : ['ok', 'watch "how a request moves" above ↑']
       ];
     },
+    chess: () => [
+      ['', 'crowd chess — one shared game, one move per visitor.'],
+      ['ok', '  siddharthranjan.app/chess'],
+      ['dim', '  make your move, then watch the game play out']
+    ],
     clear: 'clear'
   };
   COMMANDS.miss = COMMANDS.evict;

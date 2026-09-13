@@ -6,19 +6,23 @@ const LINKS = [
   ['contact', 'Contact']
 ];
 
-export default function TopBar({ theme, setTheme, brandHidden, active }) {
+// `base` is '' on the portfolio (in-page anchors) and '/' on other pages, so the
+// section links lead back to the portfolio.
+export default function TopBar({ theme, setTheme, brandHidden, active, base = '' }) {
   const dark = theme === 'dark';
+  const Brand = base ? 'a' : 'div';
   return (
     <header className={`topbar${brandHidden ? ' brand-hidden' : ''}`}>
       <div className="wrap topbar-in">
-        <div className="brand">
+        <Brand className="brand" {...(base ? { href: '/' } : {})}>
           <span className="brand-name">Siddharth Ranjan</span>
           <span className="brand-tag">Backend · Distributed Systems</span>
-        </div>
+        </Brand>
         <nav className="nav" aria-label="Primary">
           {LINKS.map(([id, label]) => (
-            <a key={id} href={`#${id}`} className={active === id ? 'is-active' : undefined}>{label}</a>
+            <a key={id} href={`${base}#${id}`} className={active === id ? 'is-active' : undefined}>{label}</a>
           ))}
+          <a href="/chess" className={active === 'chess' ? 'is-active' : undefined}>Chess</a>
         </nav>
         <button
           type="button"

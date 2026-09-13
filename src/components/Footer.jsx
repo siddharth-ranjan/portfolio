@@ -1,6 +1,7 @@
 const EMAIL = 'siddharthranjan0909@gmail.com';
 
-export default function Footer() {
+// `base` is '/' on pages other than the portfolio, so Email me leads back to its form.
+export default function Footer({ base = '' }) {
   return (
     <footer className="cta">
       <div className="wrap cta-in">
@@ -12,7 +13,7 @@ export default function Footer() {
           </p>
         </div>
         <div className="cta-btns">
-          <a className="btn btn-solid" href="#contact">Email me</a>
+          <a className="btn btn-solid" href={`${base}#contact`}>Email me</a>
           <a className="btn" href="https://github.com/siddharth-ranjan" target="_blank" rel="noopener">GitHub</a>
           <a className="btn" href="https://www.linkedin.com/in/siddharth-ranjan09/" target="_blank" rel="noopener">LinkedIn</a>
           <a className="btn" href="https://leetcode.com/u/sid0909/" target="_blank" rel="noopener">LeetCode</a>
