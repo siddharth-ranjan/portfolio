@@ -84,7 +84,8 @@ new one starts 60 seconds later.
 - State lives in **Upstash Redis**. Watching browsers poll `api/chess/version` every
   second — a single Redis GET of `chess:ver` ("{game}:{ply}"), which the CDN shares
   between everyone polling in the same second — and fetch the full `api/chess/state`
-  only when it changes, so a move shows up elsewhere within about a second. `api/chess/move` validates with chess.js, then commits through one Lua
+  only when it changes, so a move shows up elsewhere within about a second. A tab left
+  untouched for 10 minutes stops asking ("paused") until someone moves the mouse or taps. `api/chess/move` validates with chess.js, then commits through one Lua
   script that atomically checks nobody moved first and this visitor didn't make the
   previous move (the game hash keeps `lastSid`). Key layout is documented at the top of `api/_lib/redisStore.js`.
 - Anyone can react to any move with one of five emoji (once per emoji per move), and

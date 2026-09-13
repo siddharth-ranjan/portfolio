@@ -76,6 +76,10 @@ two together.
   No free text anywhere, so nothing needs moderating.
 - Clicking a move previews that position (`previewFen` on Board); the board is read-only
   while previewing and orientation stays with the live position. ← → step through.
+- Polling pace lives in `src/chess/pollSchedule.js` (tested): every second while the page
+  is in use, every 5s after 5 minutes without input or moves, and none at all after 10
+  minutes without input — moves by others don't keep an abandoned tab polling. The tag
+  then reads "paused"; any mouse, key, scroll or tap catches up at once. Hidden tabs never poll.
 - The board shows a move optimistically and rolls back if the server rejects it.
   Board colours are CSS variables (`--chess-light`, `--chess-dark`, `--chess-last`, …).
 

@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { nextPoll } from './pollSchedule.js';
 
-const POLL_MS = 1000;
-const IDLE_POLL_MS = 5000;
-const IDLE_AFTER_MS = 5 * 60_000; // no clicks, keys or moves for this long
 const STATUS_TEXT = { 400: 'Bad Request', 403: 'Forbidden', 409: 'Conflict', 429: 'Too Many Requests', 503: 'Service Unavailable' };
 const second = () => Math.floor(Date.now() / 1000);
 // the ply the board reached with this visitor's own move; while it's still that ply, they wait
@@ -39,7 +37,9 @@ export function useCrowdGame() {
   const [myPly, setMyPly] = useState(null);
   const [myReactions, setMyReactions] = useState(() => new Set());
   const [pending, setPending] = useState(false);
-  const lastActivity = useRef(Date.now());
+  const lastActivity = useRef(Date.now()); // input or a move seen: keeps polling fast
+  const lastInput = useRef(Date.now());    // clicks, keys, scrolls, taps: someone is actually here
+  const [asleep, setAsleep] = useState(false); // polling stopped until the visitor is back
   const knownGame = useRef(null);
   const current = useRef(null); // the state on screen, for the poll loop
 
@@ -93,30 +93,55 @@ export function useCrowdGame() {
     let alive = true;
     let timer;
     let first = true;
+    let sleeping = false;
+    let busy = false; // a poll is in flight; don't start a second loop
+    // pace comes from pollSchedule.js: every second in use, slower when quiet, none when abandoned
     const tick = async () => {
       if (!alive) return;
-      // always load once, even in a background tab; after that, only poll while visible
-      if (first || document.visibilityState === 'visible') await poll();
+      const next = nextPoll({
+        first,
+        visible: document.visibilityState === 'visible',
+        lastInput: lastInput.current,
+        lastChange: lastActivity.current,
+        now: Date.now()
+      });
       first = false;
+      if (next.asleep !== sleeping) {
+        sleeping = next.asleep;
+        setAsleep(sleeping);
+      }
+      if (next.poll) {
+        busy = true;
+        await poll();
+        busy = false;
+      }
       if (!alive) return;
-      const idle = Date.now() - lastActivity.current > IDLE_AFTER_MS;
-      timer = setTimeout(tick, idle ? IDLE_POLL_MS : POLL_MS);
+      timer = setTimeout(tick, next.delay);
     };
     tick();
-    const wake = () => { lastActivity.current = Date.now(); };
+    // someone is here; if polling had stopped, catch up now instead of on the next check
+    const wake = () => {
+      const now = Date.now();
+      lastInput.current = now;
+      lastActivity.current = now;
+      if (sleeping && !busy) {
+        clearTimeout(timer);
+        tick();
+      }
+    };
     const onVisible = () => {
       if (document.visibilityState !== 'visible') return;
+      const wasAsleep = sleeping;
       wake();
-      poll();
+      if (!wasAsleep) poll();
     };
-    window.addEventListener('pointerdown', wake);
-    window.addEventListener('keydown', wake);
+    const events = ['pointerdown', 'pointermove', 'keydown', 'wheel', 'scroll', 'touchstart'];
+    events.forEach((e) => window.addEventListener(e, wake, { passive: true }));
     document.addEventListener('visibilitychange', onVisible);
     return () => {
       alive = false;
       clearTimeout(timer);
-      window.removeEventListener('pointerdown', wake);
-      window.removeEventListener('keydown', wake);
+      events.forEach((e) => window.removeEventListener(e, wake));
       document.removeEventListener('visibilitychange', onVisible);
     };
   }, [poll]);
@@ -213,5 +238,5 @@ export function useCrowdGame() {
 
   const waiting = Boolean(state) && myPly === state.ply; // the last move was theirs
   const canMove = Boolean(state && !error && state.status === 'active' && !waiting && !pending);
-  return { state, error, notice, waiting, pending, canMove, submitMove, react, myReactions };
+  return { state, error, notice, waiting, pending, canMove, submitMove, react, myReactions, asleep };
 }
