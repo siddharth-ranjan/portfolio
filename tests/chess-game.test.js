@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createMemoryStore } from '../api/_lib/memoryStore.js';
-import { getState, applyMove, ROLLOVER_MS, START_FEN } from '../api/_lib/game.js';
+import { getState, applyMove, applyReaction, ROLLOVER_MS, START_FEN } from '../api/_lib/game.js';
 
 const T0 = 1_700_000_000_000;
 const visitor = (n) => ({ sid: String(n).padStart(32, '0'), ipHash: `ip-${n}` });
@@ -164,11 +164,64 @@ test('a network making too many move attempts gets 429', async () => {
 test('the version watchers poll changes with every move and every new game', async () => {
   const store = createMemoryStore();
   let s = await getState(store, T0);
-  assert.equal(await store.getVersion(), '1:0');
+  assert.equal(await store.getVersion(), '1:0:0');
   s = (await play(store, s, visitor(1), 'e2', 'e4')).body.state;
-  assert.equal(await store.getVersion(), '1:1');
+  assert.equal(await store.getVersion(), '1:1:0');
   await play(store, s, visitor(1), 'e7', 'e5'); // rejected: no change
-  assert.equal(await store.getVersion(), '1:1');
+  assert.equal(await store.getVersion(), '1:1:0');
   await store.forceNewGame(T0, START_FEN);
-  assert.equal(await store.getVersion(), '2:0');
+  assert.equal(await store.getVersion(), '2:0:0');
+});
+
+const reactTo = (store, state, who, ply, emoji) => applyReaction(store, { gameId: state.gameId, ply, emoji, ...who });
+
+test('a reaction counts once per visitor per move, bumps the version, and shows in the state', async () => {
+  const store = createMemoryStore();
+  const s = (await play(store, await getState(store, T0), visitor(1), 'e2', 'e4')).body.state;
+
+  const first = await reactTo(store, s, visitor(2), 1, 'fire');
+  assert.equal(first.status, 200);
+  assert.equal(first.body.added, true);
+  assert.deepEqual(first.body.reactions, { 1: { fire: 1 } });
+
+  const again = await reactTo(store, s, visitor(2), 1, 'fire');
+  assert.equal(again.body.added, false);
+  assert.deepEqual(again.body.reactions, { 1: { fire: 1 } });
+
+  await reactTo(store, s, visitor(3), 1, 'fire');
+  await reactTo(store, s, visitor(3), 1, 'wow');
+  assert.equal(await store.getVersion(), '1:1:3');
+
+  const fresh = await getState(store, T0);
+  assert.deepEqual(fresh.reactions, { 1: { fire: 2, wow: 1 } });
+  assert.equal(fresh.rseq, 3);
+});
+
+test('reactions only go to moves that exist in the current game, with a known emoji', async () => {
+  const store = createMemoryStore();
+  const s = (await play(store, await getState(store, T0), visitor(1), 'e2', 'e4')).body.state;
+  assert.equal((await reactTo(store, s, visitor(2), 2, 'fire')).status, 400);
+  assert.equal((await reactTo(store, s, visitor(2), 0, 'fire')).status, 400);
+  assert.equal((await reactTo(store, s, visitor(2), 1, 'poop')).status, 400);
+  assert.equal((await reactTo(store, { gameId: '99' }, visitor(2), 1, 'fire')).status, 409);
+  assert.equal((await reactTo(store, { gameId: '../x' }, visitor(2), 1, 'fire')).status, 400);
+});
+
+test('a move after reactions keeps them, and its state matches a fresh read', async () => {
+  const store = createMemoryStore();
+  let s = (await play(store, await getState(store, T0), visitor(1), 'e2', 'e4')).body.state;
+  await reactTo(store, s, visitor(2), 1, 'brain');
+  const r = await play(store, await getState(store, T0), visitor(2), 'e7', 'e5');
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.body.state.reactions, { 1: { brain: 1 } });
+  assert.deepEqual(r.body.state, await getState(store, T0));
+  assert.equal(await store.getVersion(), '1:2:1');
+});
+
+test('a network tapping reactions too fast gets 429', async () => {
+  const store = createMemoryStore();
+  const s = (await play(store, await getState(store, T0), visitor(1), 'e2', 'e4')).body.state;
+  let last;
+  for (let i = 0; i < 61; i++) last = await applyReaction(store, { gameId: s.gameId, ply: 1, emoji: 'fire', sid: `r${i}`, ipHash: 'busy' });
+  assert.equal(last.status, 429);
 });

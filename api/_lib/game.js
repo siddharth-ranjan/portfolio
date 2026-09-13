@@ -1,11 +1,14 @@
 import { Chess } from 'chess.js';
 
 export const START_FEN = new Chess().fen();
-export const ROLLOVER_MS = 60_000;                    // a finished game stays on screen this long
-export const RATE_LIMIT = { limit: 20, windowSec: 60 }; // move attempts per network
+export const ROLLOVER_MS = 60_000;                       // a finished game stays on screen this long
+export const RATE_LIMIT = { limit: 20, windowSec: 60 };  // move attempts per network
+export const REACT_LIMIT = { limit: 60, windowSec: 60 }; // reaction taps per network
+export const REACTIONS = ['fire', 'brain', 'wow', 'lol', 'oops']; // ChessPage.jsx maps these to emoji
 
 const SQUARE = /^[a-h][1-8]$/;
 const PROMOTION = /^[qrbn]$/;
+const GAME_ID = /^\d{1,12}$/;
 const STAT_FOR = { '1-0': 'whiteWins', '0-1': 'blackWins' };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -26,7 +29,19 @@ export function outcome(chess) {
   return { status: 'fifty-moves', result: '1/2-1/2' };
 }
 
-export function buildState(id, game, movers, stats, chess = loadGame(game)) {
+// stored as one hash of "ply:emoji" -> count; sent as { ply: { emoji: count } }
+export function parseReactions(fields = {}) {
+  const out = {};
+  for (const [field, count] of Object.entries(fields)) {
+    const [ply, emoji] = field.split(':');
+    const n = Number(count) || 0;
+    if (!n || !REACTIONS.includes(emoji)) continue;
+    (out[ply] ||= {})[emoji] = n;
+  }
+  return out;
+}
+
+export function buildState(id, game, movers, stats, reactions = {}, chess = loadGame(game)) {
   const status = game.status;
   return {
     gameId: String(id),
@@ -42,7 +57,9 @@ export function buildState(id, game, movers, stats, chess = loadGame(game)) {
     startedAt: Number(game.startedAt) || null,
     lastMoveAt: Number(game.lastMoveAt) || null,
     nextGameAt: status === 'active' ? null : Number(game.endedAt) + ROLLOVER_MS,
-    stats
+    stats,
+    reactions: parseReactions(reactions),
+    rseq: Number(game.rseq) || 0
   };
 }
 
@@ -53,12 +70,11 @@ const onScreen = (game, now) =>
 export async function getState(store, now = Date.now()) {
   for (let attempt = 0; attempt < 5; attempt++) {
     const snap = await store.snapshot();
-    if (snap.id && onScreen(snap.game, now)) return buildState(snap.id, snap.game, snap.movers, snap.stats);
+    const show = () => buildState(snap.id, snap.game, snap.movers, snap.stats, snap.reactions);
+    if (snap.id && onScreen(snap.game, now)) return show();
     const next = await store.startGame(snap.id, now, START_FEN);
     // another request holds the rollover lock: show the finished game, the next poll gets the new one
-    if (next && snap.game && String(next) === String(snap.id)) {
-      return buildState(snap.id, snap.game, snap.movers, snap.stats);
-    }
+    if (next && snap.game && String(next) === String(snap.id)) return show();
     if (!next) await sleep(120); // another request is creating the very first game
   }
   throw Object.assign(new Error('Could not start a game.'), { status: 503 });
@@ -120,7 +136,28 @@ export async function applyMove(store, input, now = Date.now()) {
     body: {
       ok: true,
       move: { from: move.from, to: move.to, san: move.san },
-      state: buildState(ctx.id, game, ctx.movers + (ctx.playedBefore ? 0 : 1), stats, chess)
+      state: buildState(ctx.id, game, ctx.movers + (ctx.playedBefore ? 0 : 1), stats, ctx.reactions, chess)
     }
+  };
+}
+
+// A reaction to one move of the current game. Each visitor counts once per emoji per
+// move; tapping again is harmless (added: false).
+export async function applyReaction(store, input) {
+  const gameId = String(input.gameId || '');
+  const ply = Number(input.ply);
+  const emoji = String(input.emoji || '');
+  if (!GAME_ID.test(gameId) || !Number.isInteger(ply) || ply < 1 || !REACTIONS.includes(emoji)) {
+    return reply(400, 'bad-request', "That reaction isn't available.");
+  }
+  if (!input.sid) return reply(400, 'bad-request', 'Missing visitor id.');
+
+  const r = await store.react({ id: gameId, ply, emoji, sid: input.sid, ipHash: input.ipHash, ...REACT_LIMIT });
+  if (r.verdict === 'limited') return reply(429, 'rate-limited', 'Easy on the reactions. Give it a minute.');
+  if (r.verdict === 'nogame') return reply(409, 'new-game', 'That game is over and a new one has started.');
+  if (r.verdict === 'noply') return reply(400, 'bad-request', "That move hasn't been played.");
+  return {
+    status: 200,
+    body: { ok: true, added: r.verdict === 'ok', gameId, ply, emoji, rseq: r.rseq, reactions: parseReactions(r.reactions) }
   };
 }

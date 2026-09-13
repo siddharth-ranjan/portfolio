@@ -8,6 +8,8 @@ export function createMemoryStore() {
   let ver = null;
   const games = new Map();
   const movers = new Map();
+  const reactions = new Map(); // game id -> { "ply:emoji": count }
+  const reacted = new Map();   // game id -> Set of "sid:ply:emoji"
   const locks = new Set();
   const limits = new Map();
   const stats = emptyStats();
@@ -15,13 +17,14 @@ export function createMemoryStore() {
   const newGame = (now, fen) => {
     seq += 1;
     current = String(seq);
-    ver = `${current}:0`;
+    ver = `${current}:0:0`;
     games.set(current, {
       fen, pgn: '', ply: '0', status: 'active', result: '',
-      startedAt: String(now), lastMoveAt: '', endedAt: '', lastMove: '', lastSid: ''
+      startedAt: String(now), lastMoveAt: '', endedAt: '', lastMove: '', lastSid: '', rseq: '0'
     });
     return current;
   };
+  const reactionsOf = (id) => ({ ...(reactions.get(String(id)) || {}) });
 
   const store = {
     async getCurrent() { return current; },
@@ -38,7 +41,10 @@ export function createMemoryStore() {
     async snapshot() {
       const id = current;
       const g = id ? games.get(id) : null;
-      return { id, game: g ? { ...g } : null, movers: movers.get(id)?.size || 0, stats: { ...stats } };
+      return {
+        id, game: g ? { ...g } : null, movers: movers.get(id)?.size || 0,
+        stats: { ...stats }, reactions: id ? reactionsOf(id) : {}
+      };
     },
     // everything a move needs, with the attempt counted against the network's limit
     async moveContext({ sid, ipHash, limit, windowSec }, now = Date.now()) {
@@ -74,7 +80,7 @@ export function createMemoryStore() {
       const set = movers.get(key) || new Set();
       set.add(m.sid);
       movers.set(key, set);
-      ver = `${key}:${g.ply}`;
+      ver = `${key}:${g.ply}:${g.rseq || 0}`;
       if (m.status !== 'active') {
         stats.games += 1;
         if (m.result === '1-0') stats.whiteWins += 1;
@@ -82,6 +88,29 @@ export function createMemoryStore() {
         else stats.draws += 1;
       }
       return 'ok';
+    },
+
+    async react({ id, ply, emoji, sid, ipHash, limit, windowSec }, now = Date.now()) {
+      if (!(await store.rateLimit(`react:${ipHash}`, limit, windowSec, now))) return { verdict: 'limited' };
+      const key = String(id);
+      const g = games.get(key);
+      if (current !== key || !g) return { verdict: 'nogame' };
+      if (ply < 1 || ply > Number(g.ply)) return { verdict: 'noply' };
+      const seen = reacted.get(key) || new Set();
+      const mark = `${sid}:${ply}:${emoji}`;
+      let verdict = 'dup';
+      if (!seen.has(mark)) {
+        seen.add(mark);
+        reacted.set(key, seen);
+        const counts = reactions.get(key) || {};
+        const field = `${ply}:${emoji}`;
+        counts[field] = (counts[field] || 0) + 1;
+        reactions.set(key, counts);
+        g.rseq = String(Number(g.rseq || 0) + 1);
+        ver = `${key}:${g.ply}:${g.rseq}`;
+        verdict = 'ok';
+      }
+      return { verdict, rseq: Number(g.rseq || 0), reactions: reactionsOf(key) };
     },
 
     async rateLimit(ipHash, limit, windowSec, now = Date.now()) {
@@ -98,10 +127,10 @@ export function createMemoryStore() {
     _seed(id, fields) {
       current = String(id);
       seq = Math.max(seq, Number(id));
-      ver = `${id}:${fields.ply || 0}`;
+      ver = `${id}:${fields.ply || 0}:0`;
       games.set(String(id), {
         fen: '', pgn: '', ply: '0', status: 'active', result: '',
-        startedAt: '0', lastMoveAt: '', endedAt: '', lastMove: '', lastSid: '', ...fields
+        startedAt: '0', lastMoveAt: '', endedAt: '', lastMove: '', lastSid: '', rseq: '0', ...fields
       });
     }
   };
