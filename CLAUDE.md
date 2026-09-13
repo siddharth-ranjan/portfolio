@@ -18,7 +18,10 @@ siddharthranjan.me and both www hosts 308 to it (see README → Domains).
     src/chess/          ChessPage, Board (react-chessboard v5), useCrowdGame (polling + moves)
     api/chess/          Vercel functions: state (GET), version (GET, polled), move, react, me, reset
     api/_lib/           game.js (chess.js rules), redisStore.js (Upstash + Lua commit),
-                        memoryStore.js (tests/dev), store.js (picks one), session.js, http.js
+                        memoryStore.js (tests/dev), store.js (picks one), session.js, http.js,
+                        lastfm.js (Last.fm recent-tracks parsing),
+                        artwork.js (iTunes cover fallback, cached in Redis)
+    api/music/recent.js music card on /chess: now playing + last 5 (src/chess/NowPlaying.jsx)
     tests/              node:test game-logic suite
 
 ## Run / deploy
@@ -85,7 +88,9 @@ two together.
 
 ## What is real vs illustrative
 Real: track record, résumé, links, contact form (opens the visitor's mail app),
-and crowd chess at /chess (shared game state in Upstash Redis).
+crowd chess at /chess (shared game state in Upstash Redis), and the music card there
+(YouTube Music scrobbled to Last.fm; needs `LASTFM_API_KEY` + `LASTFM_USER` in Vercel,
+hidden until they exist).
 Illustrative and labelled as such: the hop-03 pool ("Simulated pool"), latencies,
 cache hit/miss counter, lane picks, shell output. A scripted demo, not telemetry.
 The redis box is clickable (evicts the key so the next request misses); a pulsing
