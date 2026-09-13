@@ -42,7 +42,7 @@ function Dock({ side, taken }) {
  * The shared board. The server is the authority: a move is shown immediately
  * (optimistically) and rolled back if the server turns it down.
  */
-export default function Board({ fen, lastMove, history, canMove, onMove }) {
+export default function Board({ fen, previewFen, lastMove, history, canMove, onMove }) {
   const serverFen = fen || START;
   const [optimistic, setOptimistic] = useState(null);
   const [selected, setSelected] = useState(null);
@@ -57,7 +57,8 @@ export default function Board({ fen, lastMove, history, canMove, onMove }) {
     setPromotion(null);
   }, [serverFen]);
 
-  const position = optimistic || serverFen;
+  // looking back through the game shows that position; orientation stays with the live one
+  const position = previewFen || optimistic || serverFen;
   const game = useMemo(() => new Chess(position), [position]);
   const turn = game.turn();
   const targets = useMemo(

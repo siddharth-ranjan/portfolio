@@ -16,7 +16,7 @@ siddharthranjan.me and both www hosts 308 to it (see README → Domains).
     public/             favicon.svg + assets/ (resume.pdf, resume.png, icons) → served at /
     chess.html          second Vite page → /chess (vercel.json rewrite), client-rendered
     src/chess/          ChessPage, Board (react-chessboard v5), useCrowdGame (polling + moves)
-    api/chess/          Vercel functions: state (GET), version (GET, polled), move, me, reset
+    api/chess/          Vercel functions: state (GET), version (GET, polled), move, react, me, reset
     api/_lib/           game.js (chess.js rules), redisStore.js (Upstash + Lua commit),
                         memoryStore.js (tests/dev), store.js (picks one), session.js, http.js
     tests/              node:test game-logic suite
@@ -68,8 +68,14 @@ two together.
   is built from what was committed, never re-read. Responses carry `Server-Timing`.
 - Live updates: the page polls `/api/chess/version?s={epoch second}` every second (one
   Redis GET of `chess:ver` = "{game}:{ply}", shared per second by the CDN) and fetches
-  `/api/chess/state?v={version}` only when it changed. Every write that changes the
-  board must update `chess:ver` (Lua commit, new game) or watchers never see it.
+  `/api/chess/state?v={version}` only when it changed. The version is
+  "{game}:{ply}:{rseq}"; every write that changes what watchers see must update
+  `chess:ver` (Lua commit, REACT script, new game) or they never see it.
+- Reactions: fixed emoji ids (`REACTIONS` in game.js, mirrored in ChessPage.jsx), counted
+  once per visitor per move by the REACT Lua script (one round trip, rate limit inside).
+  No free text anywhere, so nothing needs moderating.
+- Clicking a move previews that position (`previewFen` on Board); the board is read-only
+  while previewing and orientation stays with the live position. ← → step through.
 - The board shows a move optimistically and rolls back if the server rejects it.
   Board colours are CSS variables (`--chess-light`, `--chess-dark`, `--chess-last`, …).
 
