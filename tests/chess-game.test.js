@@ -225,3 +225,36 @@ test('a network tapping reactions too fast gets 429', async () => {
   for (let i = 0; i < 61; i++) last = await applyReaction(store, { gameId: s.gameId, ply: 1, emoji: 'fire', sid: `r${i}`, ipHash: 'busy' });
   assert.equal(last.status, 429);
 });
+
+test('a visitor can take their own reaction back, once, and nobody else can', async () => {
+  const store = createMemoryStore();
+  const s = (await play(store, await getState(store, T0), visitor(1), 'e2', 'e4')).body.state;
+  const takeBack = (who) => applyReaction(store, { gameId: s.gameId, ply: 1, emoji: 'fire', on: false, ...who });
+  await reactTo(store, s, visitor(2), 1, 'fire');
+  await reactTo(store, s, visitor(3), 1, 'fire');
+
+  const back = await takeBack(visitor(2));
+  assert.equal(back.status, 200);
+  assert.equal(back.body.on, false);
+  assert.equal(back.body.changed, true);
+  assert.deepEqual(back.body.reactions, { 1: { fire: 1 } });
+
+  const again = await takeBack(visitor(2));
+  assert.equal(again.body.changed, false);
+  assert.deepEqual(again.body.reactions, { 1: { fire: 1 } });
+
+  const stranger = await takeBack(visitor(4));
+  assert.equal(stranger.body.changed, false, 'cannot remove a reaction you never made');
+  assert.deepEqual(stranger.body.reactions, { 1: { fire: 1 } });
+
+  const last = await takeBack(visitor(3));
+  assert.deepEqual(last.body.reactions, {}, 'the last one gone leaves the move with no reactions');
+  assert.equal(await store.getVersion(), '1:1:4', 'two adds and two removals; no-ops do not move the version');
+  const fresh = await getState(store, T0);
+  assert.deepEqual(fresh.reactions, {});
+  assert.equal(fresh.rseq, 4);
+
+  const readd = await reactTo(store, s, visitor(2), 1, 'fire');
+  assert.equal(readd.body.changed, true);
+  assert.deepEqual(readd.body.reactions, { 1: { fire: 1 } });
+});

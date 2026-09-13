@@ -142,22 +142,27 @@ export async function applyMove(store, input, now = Date.now()) {
 }
 
 // A reaction to one move of the current game. Each visitor counts once per emoji per
-// move; tapping again is harmless (added: false).
+// move. `on: false` takes the visitor's own reaction back; repeating either is harmless
+// (changed: false), and nobody can remove a reaction they didn't make.
 export async function applyReaction(store, input) {
   const gameId = String(input.gameId || '');
   const ply = Number(input.ply);
   const emoji = String(input.emoji || '');
+  const on = input.on !== false && input.on !== 'false';
   if (!GAME_ID.test(gameId) || !Number.isInteger(ply) || ply < 1 || !REACTIONS.includes(emoji)) {
     return reply(400, 'bad-request', "That reaction isn't available.");
   }
   if (!input.sid) return reply(400, 'bad-request', 'Missing visitor id.');
 
-  const r = await store.react({ id: gameId, ply, emoji, sid: input.sid, ipHash: input.ipHash, ...REACT_LIMIT });
+  const r = await store.react({ id: gameId, ply, emoji, on, sid: input.sid, ipHash: input.ipHash, ...REACT_LIMIT });
   if (r.verdict === 'limited') return reply(429, 'rate-limited', 'Easy on the reactions. Give it a minute.');
   if (r.verdict === 'nogame') return reply(409, 'new-game', 'That game is over and a new one has started.');
   if (r.verdict === 'noply') return reply(400, 'bad-request', "That move hasn't been played.");
   return {
     status: 200,
-    body: { ok: true, added: r.verdict === 'ok', gameId, ply, emoji, rseq: r.rseq, reactions: parseReactions(r.reactions) }
+    body: {
+      ok: true, on, changed: r.verdict === 'ok' || r.verdict === 'removed', added: r.verdict === 'ok',
+      gameId, ply, emoji, rseq: r.rseq, reactions: parseReactions(r.reactions)
+    }
   };
 }

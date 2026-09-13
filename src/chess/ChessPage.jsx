@@ -187,8 +187,9 @@ export default function ChessPage() {
                       const mine = myReactions.has(`${target}:${id}`);
                       return (
                         <button key={id} type="button" className={`chess-react-btn${mine ? ' is-mine' : ''}`}
-                          onClick={() => react(target, id)} disabled={mine || Boolean(error)}
-                          aria-pressed={mine} aria-label={`${name}${n ? `, ${n}` : ''}`} title={name}>
+                          onClick={() => react(target, id)} disabled={Boolean(error)}
+                          aria-pressed={mine} aria-label={`${name}${n ? `, ${n}` : ''}${mine ? ', yours — tap to take it back' : ''}`}
+                          title={mine ? `${name} — tap again to take it back` : name}>
                           <span aria-hidden="true">{glyph}</span>
                           {n > 0 && <span className="n">{n}</span>}
                         </button>

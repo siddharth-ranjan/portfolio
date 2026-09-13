@@ -51,8 +51,9 @@ return 'ok'
 `;
 
 // A reaction in one round trip: count the tap against the network, check it's the
-// current game and a move that exists, add it once per visitor, bump the version.
-// Returns { verdict, rseq, reactions (flat) }.
+// current game and a move that exists, then add it (once per visitor) or, with on=0,
+// take this visitor's own reaction back. The version moves only when something changed.
+// Returns { verdict: ok|dup|removed|absent|limited|nogame|noply, rseq, reactions (flat) }.
 const REACT = `
 local n = redis.call('INCR', KEYS[1])
 if n == 1 then redis.call('EXPIRE', KEYS[1], ARGV[2]) end
@@ -61,14 +62,27 @@ if redis.call('GET', KEYS[2]) ~= ARGV[3] then return {'nogame'} end
 local ply = tonumber(redis.call('HGET', KEYS[3], 'ply') or '-1')
 local target = tonumber(ARGV[4])
 if target < 1 or target > ply then return {'noply'} end
-local verdict = 'dup'
-if redis.call('SADD', KEYS[5], ARGV[6] .. ':' .. ARGV[4] .. ':' .. ARGV[5]) == 1 then
-  redis.call('HINCRBY', KEYS[4], ARGV[4] .. ':' .. ARGV[5], 1)
+local mark = ARGV[6] .. ':' .. ARGV[4] .. ':' .. ARGV[5]
+local field = ARGV[4] .. ':' .. ARGV[5]
+local verdict
+if ARGV[8] == '0' then
+  verdict = 'absent'
+  if redis.call('SREM', KEYS[5], mark) == 1 then
+    if redis.call('HINCRBY', KEYS[4], field, -1) <= 0 then redis.call('HDEL', KEYS[4], field) end
+    verdict = 'removed'
+  end
+else
+  verdict = 'dup'
+  if redis.call('SADD', KEYS[5], mark) == 1 then
+    redis.call('HINCRBY', KEYS[4], field, 1)
+    verdict = 'ok'
+  end
+end
+if verdict == 'ok' or verdict == 'removed' then
   local r = redis.call('HINCRBY', KEYS[3], 'rseq', 1)
   redis.call('SET', KEYS[6], ARGV[3] .. ':' .. ply .. ':' .. r)
   redis.call('EXPIRE', KEYS[4], ARGV[7])
   redis.call('EXPIRE', KEYS[5], ARGV[7])
-  verdict = 'ok'
 end
 return {verdict, tostring(redis.call('HGET', KEYS[3], 'rseq') or '0'), redis.call('HGETALL', KEYS[4])}
 `;
@@ -171,11 +185,11 @@ export function createRedisStore(redis) {
       );
       return String(out);
     },
-    async react({ id, ply, emoji, sid, ipHash, limit, windowSec }) {
+    async react({ id, ply, emoji, sid, ipHash, limit, windowSec, on = true }) {
       const out = await redis.eval(
         REACT,
         [K.rlr(ipHash), K.current, K.game(id), K.reactions(id), K.reacted(id), K.ver],
-        [String(limit), String(windowSec), String(id), String(ply), emoji, sid, String(MONTH * 3)]
+        [String(limit), String(windowSec), String(id), String(ply), emoji, sid, String(MONTH * 3), on ? '1' : '0']
       );
       const [verdict, rseq, flat] = Array.isArray(out) ? out : [out];
       return { verdict: String(verdict), rseq: Number(rseq) || 0, reactions: toObject(flat) };
