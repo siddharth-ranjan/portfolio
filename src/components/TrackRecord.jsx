@@ -5,7 +5,7 @@ const ROWS = [
     desc: 'R&D Intern, FN BBN CU-Hardening · test-data aggregation tooling, −30% reporting effort', when: 'Aug 24 – May 25' },
   { badge: 'active', label: 'build', name: 'vigil',
     desc: 'Incident intelligence — alert firehose to correlated incidents, human-approved remediation', when: 'Sept 2026 →' },
-  { badge: 'shipped', label: 'shipped', name: 'multi-pdf-chat', href: 'https://github.com/siddharth-ranjan/multi-pdf-chat',
+  { badge: 'shipped', label: 'shipped', name: 'multi-pdf-chat', href: 'https://chatpdf.siddharthranjan.app',
     desc: 'GenAI document QA over LangChain + FAISS, Google Generative AI', when: 'Feb 2024' },
   { badge: 'shipped', label: 'shipped', name: 'blogging-project', href: 'https://github.com/siddharth-ranjan/blogging-project',
     desc: 'Spring Boot REST backend — registration, posts, likes and comments over Spring Data JPA + MySQL', when: 'Jan – Feb 2024' },
