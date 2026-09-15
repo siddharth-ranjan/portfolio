@@ -6,7 +6,7 @@ export default function Footer({ base = '' }) {
     <footer className="cta">
       <div className="wrap cta-in">
         <div>
-          <h2>Open to backend roles</h2>
+          <h2>Open to backend &amp; AI roles</h2>
           <p className="contact">
             <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
             <span aria-hidden="true">·</span> India

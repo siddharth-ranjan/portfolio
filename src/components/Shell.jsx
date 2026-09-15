@@ -2,14 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { buildCommands, suggest } from '../shell/commands.js';
 import { useEvict } from '../flowContext.js';
 
-const KEYS = ['flow', 'cache', 'evict', 'scale', 'failure', 'whoami'];
+const KEYS = ['flow', 'rag', 'cache', 'evict', 'scale', 'failure', 'whoami'];
 const CLASS = { dim: 'dim', ok: 'ok-t', warn: 'warn-t' };
 
 const INTRO = [
   { node: <>sr-shell 1.0 — type <code>help</code> for commands</>, cls: 'dim' },
   { echo: 'whoami' },
-  { cls: 'ok', text: 'siddharth-ranjan · backend engineer · Java / Spring Boot' },
-  { cls: 'dim', text: 'distributed systems · event-driven · Kafka, Redis, MySQL' }
+  { cls: 'ok', text: 'siddharth-ranjan · backend & AI engineer · Java / Python' },
+  { cls: 'dim', text: 'distributed systems · RAG · Kafka, Redis, LangChain, FAISS' }
 ];
 
 export default function Shell() {

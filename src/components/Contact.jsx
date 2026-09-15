@@ -5,10 +5,10 @@ const TO = 'siddharthranjan0909@gmail.com';
 // each route gets its own subject line and its own prompt for the message
 const ROUTES = {
   '/roles': {
-    subject: 'Backend role',
+    subject: 'Backend or AI role',
     hint: 'the role, team and stack',
-    label: 'backend role',
-    placeholder: "We're hiring a backend engineer for our payments team (Java, Spring Boot, Kafka). Here's the role and what the interview loop looks like…"
+    label: 'backend or AI role',
+    placeholder: "We're hiring an engineer to build retrieval and LLM features on our Java platform (Spring Boot, Kafka, Python). Here's the role and what the interview loop looks like…"
   },
   '/contract': {
     subject: 'Contract work',

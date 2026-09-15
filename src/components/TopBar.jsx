@@ -1,5 +1,6 @@
 const LINKS = [
   ['flow', 'Flow'],
+  ['ai', 'AI'],
   ['services', 'Services'],
   ['shell', 'Shell'],
   ['resume', 'Résumé'],
@@ -16,7 +17,7 @@ export default function TopBar({ theme, setTheme, brandHidden, active, base = ''
       <div className="wrap topbar-in">
         <Brand className="brand" {...(base ? { href: '/' } : {})}>
           <span className="brand-name">Siddharth Ranjan</span>
-          <span className="brand-tag">Backend · Distributed Systems</span>
+          <span className="brand-tag">Backend · AI</span>
         </Brand>
         <nav className="nav" aria-label="Primary">
           {LINKS.map(([id, label]) => (

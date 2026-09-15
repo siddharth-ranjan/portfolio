@@ -9,6 +9,8 @@ import Flow from './components/Flow.jsx';
 import PoolPanel from './components/PoolPanel.jsx';
 import Async from './components/Async.jsx';
 import Ownership from './components/Ownership.jsx';
+import AiWork from './components/AiWork.jsx';
+import AiFlow from './components/AiFlow.jsx';
 import Shell from './components/Shell.jsx';
 import ChessTeaser from './components/ChessTeaser.jsx';
 import TrackRecord from './components/TrackRecord.jsx';
@@ -16,7 +18,7 @@ import Resume from './components/Resume.jsx';
 import Contact from './components/Contact.jsx';
 import Footer from './components/Footer.jsx';
 
-const SECTIONS = ['flow', 'services', 'shell', 'resume', 'contact'];
+const SECTIONS = ['flow', 'ai', 'services', 'shell', 'resume', 'contact'];
 
 export default function App() {
   const [theme, setTheme] = useTheme();
@@ -45,6 +47,8 @@ export default function App() {
       <main>
         <Hero nameRef={heroNameRef} />
         <Flow />
+        <AiFlow />
+        <AiWork />
         <PoolPanel />
         <Async />
         <Ownership />

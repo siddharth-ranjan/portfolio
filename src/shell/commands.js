@@ -6,6 +6,7 @@ export function buildCommands(evict) {
       ['dim', 'commands'],
       ['', '  whoami     who is behind this'],
       ['', '  trace      walk the request path hop by hop'],
+      ['', '  rag        walk an AI question through retrieval and the model'],
       ['', '  flow       the seven hops, one line each'],
       ['', '  cache      what the cache absorbs'],
       ['', '  scale      how the pool resizes'],
@@ -18,8 +19,8 @@ export function buildCommands(evict) {
       ['', '  clear      wipe the screen']
     ],
     whoami: () => [
-      ['ok', 'siddharth-ranjan · backend engineer · Java / Spring Boot'],
-      ['dim', 'distributed systems · event-driven · Kafka, Redis, MySQL']
+      ['ok', 'siddharth-ranjan · backend & AI engineer · Java / Python'],
+      ['dim', 'distributed systems · RAG · Kafka, Redis, LangChain, FAISS']
     ],
     flow: () => [
       ['dim', '01 client        browser · mobile · service call      0.0ms'],
@@ -42,6 +43,19 @@ export function buildCommands(evict) {
         ['', '  06 redis         3.5ms   HIT orders:8821 (ttl 42s)'],
         ['warn', '  -- mysql never touched on this path'],
         ['ok', '← 200 OK · 3.9ms · cache hit']
+      ]
+    }),
+    rag: () => ({
+      stream: [
+        ['dim', 'POST /api/v1/ask  "which invoices are overdue?"  →  tracing'],
+        ['', '  01 api             2ms    jwt ok · quota 41/200'],
+        ['', '  02 rag service     3ms    normalise the question, check the cache'],
+        ['warn', '  03 semantic cache  4ms    MISS — nothing similar asked in 24h'],
+        ['', '  04 embeddings     38ms    question → vector'],
+        ['', '  05 faiss           6ms    top-4 chunks from 3 PDFs'],
+        ['', '  06 llm           1.31s    answer written from those 4 chunks'],
+        ['', '  07 cache           2ms    SET answer · ttl 24h — the next ask ends at 03'],
+        ['ok', '← 200 OK · 1.36s · 3 sources']
       ]
     }),
     cache: () => [
@@ -74,7 +88,8 @@ export function buildCommands(evict) {
       ['dim', '  cache       Redis'],
       ['dim', '  store       MySQL'],
       ['dim', '  cloud       AWS · Microsoft Azure'],
-      ['dim', '  ai          LangChain · FAISS · Gemini API · Vertex AI']
+      ['dim', '  ai · rag    LangChain · FAISS · embeddings'],
+      ['dim', '  models      Gemini API · Vertex AI · Claude']
     ],
     projects: () => [
       ['dim', '  [active]     TCS               System Engineer C1 — Prime      Jan 2026 →'],
@@ -92,7 +107,7 @@ export function buildCommands(evict) {
       ['ok', '  github.com/siddharth-ranjan'],
       ['ok', '  linkedin.com/in/siddharth-ranjan09'],
       ['ok', '  leetcode.com/u/sid0909'],
-      ['dim', '  India — open to backend roles'],
+      ['dim', '  India — open to backend & AI roles'],
       ['', '  or send a request with the form at #contact ↓']
     ],
     evict: () => {

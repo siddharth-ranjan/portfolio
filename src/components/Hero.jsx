@@ -1,11 +1,11 @@
 const STACK = [
   ['Language', 'Java · Python · SQL'],
-  ['Framework', 'Spring Boot · Spring Data JPA'],
+  ['Backend', 'Spring Boot · Spring Data JPA · Flask'],
   ['Messaging', 'Apache Kafka'],
-  ['Cache', 'Redis'],
-  ['Store', 'MySQL'],
-  ['Cloud', 'AWS · Azure'],
-  ['AI', 'LangChain · FAISS · Gemini API']
+  ['Data', 'Redis · MySQL'],
+  ['AI · RAG', 'LangChain · FAISS · embeddings'],
+  ['Models', 'Gemini API · Vertex AI · Claude'],
+  ['Cloud', 'AWS · Azure']
 ];
 
 export default function Hero({ nameRef }) {
@@ -15,14 +15,14 @@ export default function Hero({ nameRef }) {
         <p className="hero-id">
           <span className="hero-name" ref={nameRef}>Siddharth Ranjan</span>
           <span className="hero-role">
-            <i className="live-dot" aria-hidden="true" />Backend engineer · India · open to roles
+            <i className="live-dot" aria-hidden="true" />Backend &amp; AI engineer · India · open to roles
           </span>
         </p>
-        <h1>Most reads<br />should never<br />reach the<br />database.</h1>
+        <h1>Backends<br />that scale.<br />AI that<br />answers.</h1>
         <p className="lede">
-          Getting there is the work: a cache that absorbs the reads, stateless services
-          behind a load balancer, and an event log that lets the slow parts happen later. Java,
-          Spring Boot, Kafka, Redis, MySQL.
+          I build the service layer — caches, queues and APIs that stay fast under load — and the
+          AI features on top of it: retrieval over documents, a vector index, and model calls that
+          get a cache in front and a timeout behind, like any other dependency.
         </p>
       </div>
       <dl className="spec" aria-label="Stack">

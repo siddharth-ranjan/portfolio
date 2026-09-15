@@ -692,3 +692,30 @@ a.brand{color:inherit;text-decoration:none}
 .chess-static-sq.is-dark{background:var(--chess-dark)}
 .chess-static .is-white{color:#f5f5f5;-webkit-text-stroke:.8px #1b1b1b}
 .chess-static .is-black{color:#1b1b1b;-webkit-text-stroke:.8px #9aa4b2}
+
+/* ── AI, built like a backend: proof cards ─────────────────────── */
+.ai-proof{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:34px}
+.ai-card{margin-top:0;display:flex;flex-direction:column}
+.ai-card .panel-head{padding:12px 16px}
+.ai-card .badge{padding:5px 10px}
+.ai-card h3{font-size:clamp(22px,2.2vw,28px);padding:18px 18px 0}
+.ai-card p{margin:10px 18px 20px;color:var(--muted);font-size:14.5px;line-height:1.55}
+@media (max-width:960px){.ai-proof{grid-template-columns:1fr}}
+
+/* ── how an AI answer moves: the AI flow uses the chain, in violet ─── */
+.ai-flow .box.is-lit{border-color:var(--violet);background:color-mix(in srgb,var(--violet) 8%,var(--panel))}
+.ai-flow .box[role="button"]{position:relative;cursor:pointer}
+.ai-flow .box[role="button"]:hover{border-color:var(--amber)}
+.ai-flow .edge.is-pass::after{opacity:1;background:var(--violet);box-shadow:0 0 14px var(--violet);
+  animation:ai-pass .52s cubic-bezier(.45,0,.55,1) both}
+@keyframes ai-pass{from{left:0}to{left:100%}}
+@keyframes ai-pass-y{from{top:0}to{top:100%}}
+.ai-flow .evict-hint::after{content:"click to forget"}
+@media (hover:none){.ai-flow .evict-hint::after{content:"tap to forget"}}
+@media (min-width:1101px) and (max-width:1360px){.ai-flow .evict-hint::after{content:"forget"}}
+.ai-answer{font-family:var(--mono);font-size:12px;color:var(--green);transition:color .25s}
+.ai-answer.miss{color:var(--amber)}
+@media (max-width:1100px){
+  .ai-flow{padding-right:0}
+  .ai-flow .edge.is-pass::after{left:var(--lx);animation-name:ai-pass-y}
+}

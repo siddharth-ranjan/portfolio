@@ -8,7 +8,8 @@ siddharthranjan.me and both www hosts 308 to it (see README → Domains).
     src/main.jsx        entry, imports styles.css
     src/App.jsx         composition, brand reveal, scrollspy, FlowContext (evict bridge)
     src/styles.css      the whole design system — tokens, layout, themes, responsive
-    src/components/     one per section (Flow and Shell are the involved ones)
+    src/components/     one per section (Flow and Shell are the involved ones); AiFlow is the
+                        AI request animation (React state + chain CSS), AiWork the AI practice + proof
     src/hooks/          useTheme useReveal useFlow useScrollSpy
     src/shell/commands.js  command map, Damerau–Levenshtein suggestions
     src/entry-server.jsx   SSR entry; scripts/prerender.js injects the HTML into dist
@@ -100,7 +101,10 @@ crowd chess at /chess (shared game state in Upstash Redis), and the music card t
 (YouTube Music scrobbled to Last.fm; needs `LASTFM_API_KEY` + `LASTFM_USER` in Vercel,
 hidden until they exist).
 Illustrative and labelled as such: the hop-03 pool ("Simulated pool"), latencies,
-cache hit/miss counter, lane picks, shell output. A scripted demo, not telemetry.
+cache hit/miss counter, lane picks, shell output (including `rag`), and "How an AI answer
+moves" (its semantic cache is clickable and follows the same evictPhase rules). A scripted
+demo, not telemetry. "AI, built like a backend" (AiWork) is real: its proof cards are
+ChatPDF, vigil and the certifications from the track record.
 The redis box is clickable (evicts the key so the next request misses); a pulsing
 "click to evict" tag on it advertises that; it hides while an eviction plays out
 (the forced miss) and returns on the next cache hit. Taps in between are ignored, and the
