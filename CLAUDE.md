@@ -14,7 +14,9 @@ siddharthranjan.me and both www hosts 308 to it (see README → Domains).
     src/entry-server.jsx   SSR entry; scripts/prerender.js injects the HTML into dist
     scripts/og-image.py    regenerates the link-preview card (og.png)
     scripts/og-chess.py    regenerates the /chess card (og-chess.png)
-    scripts/icons.py       regenerates the favicons: "SR" (main) and a knight (/chess, chess-*)
+    scripts/icons.py       regenerates the favicons: "SR" (main) and a knight (/chess, chess-*);
+                           vite.config.js inlines each page's SVG favicon as a data URI, and
+                           vercel.json caches the icon files for a day
     public/             favicon.svg + assets/ (resume.pdf, resume.png, icons) → served at /
     chess.html          second Vite page → /chess (vercel.json rewrite); static shell prerendered
     src/chess/          ChessPage, Board (react-chessboard v5), useCrowdGame (polling + moves)

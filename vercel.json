@@ -3,7 +3,9 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "regions": ["bom1"],
+  "regions": [
+    "bom1"
+  ],
   "redirects": [
     {
       "source": "/resume",
@@ -20,6 +22,26 @@
     {
       "source": "/chess",
       "destination": "/chess.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/favicon.svg",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
+    },
+    {
+      "source": "/assets/:icon(favicon-32.png|apple-touch-icon.png|chess-icon.svg|chess-favicon-32.png|chess-apple-touch-icon.png)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
     }
   ]
 }
