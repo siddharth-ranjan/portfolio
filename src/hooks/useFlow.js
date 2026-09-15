@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { createEvictMachine } from './evictPhase.js';
 
 const CACHE = 5;
+// what the return rail and the counter say; Flow can override them
+const LABELS = { hit: '3.9ms · cache hit', miss: '15.9ms · cache miss', never: 'never reached mysql' };
 const DB = 6;
 // below 1100px the chain runs top to bottom, so motion switches axis
 const vertical = () => matchMedia('(max-width:1100px)').matches;
@@ -12,13 +14,13 @@ const vertical = () => matchMedia('(max-width:1100px)').matches;
  * express. React owns only what is rendered as text: the counter, the response
  * label and the paused state.
  */
-export function useFlow(flowRef, railRef, { onStats, onLabel, onEvict, onEvictCleared }) {
+export function useFlow(flowRef, railRef, { onStats, onLabel, onEvict, onEvictCleared, labels = LABELS }) {
   const [running, setRunning] = useState(true);
   const evictRef = useRef(() => 'unavailable');
   const runningRef = useRef(true);
   const flushRef = useRef(null);
-  const cbs = useRef({ onStats, onLabel, onEvict, onEvictCleared });
-  cbs.current = { onStats, onLabel, onEvict, onEvictCleared };
+  const cbs = useRef({ onStats, onLabel, onEvict, onEvictCleared, labels });
+  cbs.current = { onStats, onLabel, onEvict, onEvictCleared, labels };
 
   useEffect(() => {
     const flow = flowRef.current;
@@ -128,7 +130,7 @@ export function useFlow(flowRef, railRef, { onStats, onLabel, onEvict, onEvictCl
       return step
         .then(() => {
           if (stopped) return null;
-          cbs.current.onLabel({ text: `← 200 OK · ${miss ? '15.9ms · cache miss' : '3.9ms · cache hit'}`, miss });
+          cbs.current.onLabel({ text: `← 200 OK · ${miss ? cbs.current.labels.miss : cbs.current.labels.hit}`, miss });
           back.classList.toggle('miss', miss);
           back.classList.add('on');
           const dur = miss ? 1300 : 900;
@@ -145,7 +147,7 @@ export function useFlow(flowRef, railRef, { onStats, onLabel, onEvict, onEvictCl
           if (!miss) hits++;
           if (evict.finish(miss) && cbs.current.onEvictCleared) cbs.current.onEvictCleared();
           cbs.current.onStats(
-            `Live · ${n} requests · ${hits} cache hits · ${Math.round((hits / n) * 100)}% never reached mysql${HINT}`
+            `Live · ${n} requests · ${hits} cache hits · ${Math.round((hits / n) * 100)}% ${cbs.current.labels.never}${HINT}`
           );
           return sleep(1500);
         });

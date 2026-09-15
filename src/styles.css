@@ -702,20 +702,45 @@ a.brand{color:inherit;text-decoration:none}
 .ai-card p{margin:10px 18px 20px;color:var(--muted);font-size:14.5px;line-height:1.55}
 @media (max-width:960px){.ai-proof{grid-template-columns:1fr}}
 
-/* ── how an AI answer moves: the AI flow uses the chain, in violet ─── */
-.ai-flow .box.is-lit{border-color:var(--violet);background:color-mix(in srgb,var(--violet) 8%,var(--panel))}
-.ai-flow .box[role="button"]{position:relative;cursor:pointer}
-.ai-flow .box[role="button"]:hover{border-color:var(--amber)}
-.ai-flow .edge.is-pass::after{opacity:1;background:var(--violet);box-shadow:0 0 14px var(--violet);
-  animation:ai-pass .52s cubic-bezier(.45,0,.55,1) both}
-@keyframes ai-pass{from{left:0}to{left:100%}}
-@keyframes ai-pass-y{from{top:0}to{top:100%}}
-.ai-flow .evict-hint::after{content:"click to forget"}
-@media (hover:none){.ai-flow .evict-hint::after{content:"tap to forget"}}
-@media (min-width:1101px) and (max-width:1360px){.ai-flow .evict-hint::after{content:"forget"}}
-.ai-answer{font-family:var(--mono);font-size:12px;color:var(--green);transition:color .25s}
-.ai-answer.miss{color:var(--amber)}
-@media (max-width:1100px){
-  .ai-flow{padding-right:0}
-  .ai-flow .edge.is-pass::after{left:var(--lx);animation-name:ai-pass-y}
-}
+/* ── refreshed look (main page only, under .refresh) ───────────────── */
+.refresh{--r:12px;counter-reset:sec}
+.refresh .hero{position:relative;isolation:isolate}
+.refresh .hero::before{content:"";position:absolute;z-index:-1;pointer-events:none;
+  top:0;right:0;width:min(760px,80vw);height:560px;filter:blur(24px);
+  background:
+    radial-gradient(closest-side at 62% 42%,color-mix(in srgb,var(--violet) 26%,transparent),transparent),
+    radial-gradient(closest-side at 32% 66%,color-mix(in srgb,var(--blue) 18%,transparent),transparent)}
+.refresh h1 .ai-word{color:var(--violet)}
+.tracks{display:grid;gap:14px}
+.track{--c:var(--blue);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;
+  background:color-mix(in srgb,var(--panel) 82%,transparent);transition:border-color .2s}
+.track:hover{border-color:var(--c)}
+.track-head{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.track-head i{width:9px;height:9px;border-radius:3px;background:var(--c)}
+.track ul{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.track li{font-family:var(--mono);font-size:12.5px;line-height:1.2;padding:6px 11px;color:var(--text);
+  border:1px solid color-mix(in srgb,var(--c) 35%,var(--line));border-radius:999px;
+  background:color-mix(in srgb,var(--c) 8%,transparent)}
+
+/* section headings get a number */
+.refresh .block-head h2::before{counter-increment:sec;content:counter(sec,decimal-leading-zero);
+  display:block;margin-bottom:10px;font-family:var(--mono);font-size:12px;font-weight:400;
+  letter-spacing:.2em;color:var(--violet)}
+
+/* softer surfaces */
+.refresh .panel,.refresh .ai-card,.refresh .chess-teaser,.refresh .term{border-radius:var(--r);overflow:hidden}
+.refresh .box{border-radius:10px}
+.refresh .btn,.refresh .flow-btn,.refresh .term-keys button{border-radius:10px}
+.refresh .badge{border-radius:999px}
+.refresh .owns li,.refresh .record li{border-radius:10px;padding-left:10px;padding-right:10px}
+.refresh .box.is-dashed.is-lit{border-color:var(--violet);background:color-mix(in srgb,var(--violet) 8%,transparent)}
+.refresh .box.is-dashed.is-lit .ms{color:var(--violet)}
+
+/* footer band and primary button pick up the AI accent */
+.refresh ~ .cta{background:linear-gradient(115deg,color-mix(in srgb,var(--violet) 20%,var(--cta-bg)),var(--cta-bg) 58%)}
+.refresh ~ .cta .btn-solid,.refresh .btn-solid{background:var(--violet);border-color:var(--violet);color:#0a0f16}
+.refresh ~ .cta .btn,.refresh ~ .cta .btn-solid{border-radius:10px}
+.refresh ~ .cta .btn-solid:hover,.refresh .btn-solid:hover{background:transparent;color:var(--text);border-color:var(--text)}
+[data-theme="light"] .refresh ~ .cta .btn-solid,[data-theme="light"] .refresh .btn-solid{color:#fff}
+

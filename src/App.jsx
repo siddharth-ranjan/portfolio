@@ -10,7 +10,6 @@ import PoolPanel from './components/PoolPanel.jsx';
 import Async from './components/Async.jsx';
 import Ownership from './components/Ownership.jsx';
 import AiWork from './components/AiWork.jsx';
-import AiFlow from './components/AiFlow.jsx';
 import Shell from './components/Shell.jsx';
 import ChessTeaser from './components/ChessTeaser.jsx';
 import TrackRecord from './components/TrackRecord.jsx';
@@ -44,10 +43,9 @@ export default function App() {
     <FlowContext.Provider value={evictBridge}>
       <a className="skip" href="#flow">Skip to content</a>
       <TopBar theme={theme} setTheme={setTheme} brandHidden={brandHidden} active={active} />
-      <main>
+      <main className="refresh">
         <Hero nameRef={heroNameRef} />
         <Flow />
-        <AiFlow />
         <AiWork />
         <PoolPanel />
         <Async />

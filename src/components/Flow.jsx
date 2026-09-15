@@ -30,12 +30,15 @@ const Edge = ({ label }) => (
   <li className="edge" aria-hidden="true"><span>{label}</span></li>
 );
 
+// one path for an API call or a question: hops 05–07 are the AI side
+const FLOW_LABELS = { hit: '4.1ms · cache hit', miss: '1.36s · cache miss → model', never: 'never reached the model' };
+
 export default function Flow() {
   const flowRef = useRef(null);
   const railRef = useRef(null);
   const bridge = useEvict();
   const [stats, setStats] = useState('Live · one GET every few seconds');
-  const [label, setLabel] = useState({ text: '← 200 OK · 3.9ms · cache hit', miss: false });
+  const [label, setLabel] = useState({ text: `← 200 OK · ${FLOW_LABELS.hit}`, miss: false });
 
   // the "click to evict" tag hides while an eviction plays out, and returns on the next cache hit
   const [evictPending, setEvictPending] = useState(false);
@@ -44,7 +47,7 @@ export default function Flow() {
   const onLabel = useCallback((l) => setLabel(l), []);
   const onEvict = useCallback(() => setEvictPending(true), []);
   const onEvictCleared = useCallback(() => setEvictPending(false), []);
-  const { running, setRunning, evictRef } = useFlow(flowRef, railRef, { onStats, onLabel, onEvict, onEvictCleared });
+  const { running, setRunning, evictRef } = useFlow(flowRef, railRef, { onStats, onLabel, onEvict, onEvictCleared, labels: FLOW_LABELS });
 
   // let the shell's `evict` command reach this section
   useEffect(() => { bridge.current = () => evictRef.current(); }, [bridge, evictRef]);
@@ -54,12 +57,13 @@ export default function Flow() {
   return (
     <section id="flow" className="wrap block">
       <div className="block-head">
-        <h2>How a request moves</h2>
+        <h2>One request path, AI included</h2>
         <span className="tag">Solid = blocking · Dashed = async</span>
       </div>
       <p className="block-sub">
-        One GET, seven hops, under four milliseconds. Watch where it stops. Then
-        click redis to evict its key and watch the next request fall through to mysql.
+        One API call or one question, seven hops. Most end at the cache in milliseconds; a new
+        question goes on to retrieval and the model. Click redis to evict an answer and watch the
+        next one go all the way.
       </p>
 
       <div className="chain-scroll flow-scroll" id="flow-scroll" ref={flowRef}>
@@ -102,21 +106,21 @@ export default function Flow() {
 
           <Hop n="04" title="api gateway" desc="JWT · rate limit · routing" ms="2.6ms" />
           <Edge label="internal" />
-          <Hop n="05" title="service ×3" desc="stateless · idempotent writes" ms="3.1ms" />
+          <Hop n="05" title="rag service ×3" desc="stateless · retrieval + prompt" ms="3.1ms" />
           <Edge label="cache-aside" />
           {/* redis is the one box you can act on: evicting its key forces the next request to miss */}
           <Hop
-            n="06" title="redis" desc="most reads end right here" ms="3.5ms"
+            n="06" title="redis" desc="semantic cache · repeats end here" ms="3.5ms"
             hint={evictPending ? null : <span className="evict-hint" aria-hidden="true" />}
             boxProps={{
               role: 'button',
               tabIndex: 0,
-              title: 'Evict the cached key',
-              'aria-label': 'Evict the cached key: the next request misses and reads from mysql'
+              title: 'Evict the cached answer',
+              'aria-label': 'Evict the cached answer: the next question misses and goes to the model'
             }}
           />
           <Edge label="on miss only" />
-          <Hop n="07" title="mysql" desc="source of truth · read replicas" ms="+12ms on miss" boxClass="is-dashed" />
+          <Hop n="07" title="faiss + llm" desc="embed · search · generate" ms="+1.3s on miss" boxClass="is-dashed" />
         </ol>
         <div className="return-rail" aria-hidden="true" ref={railRef}>
           <span className="packet-back" />
